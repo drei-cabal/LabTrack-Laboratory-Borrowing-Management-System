@@ -121,8 +121,6 @@ export default function HomeScreen() {
               </Text>
             ) : null}
           </View>
-
-          <Text style={styles.version}>v1.0.0 - offline</Text>
         </View>
       </SafeAreaView>
     </View>
