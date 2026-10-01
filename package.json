@@ -1,0 +1,13 @@
+{
+  "name": "labtrack-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root launcher for the LabTrack Expo application.",
+  "scripts": {
+    "start": "npm --prefix ./LabTrack run start",
+    "android": "npm --prefix ./LabTrack run android",
+    "ios": "npm --prefix ./LabTrack run ios",
+    "web": "npm --prefix ./LabTrack run web",
+    "lint": "npm --prefix ./LabTrack run lint"
+  }
+}

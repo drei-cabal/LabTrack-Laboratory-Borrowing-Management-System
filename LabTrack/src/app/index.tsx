@@ -1,98 +1,309 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { ROUTES } from '../routing/routes';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { authController } from '../server/controllers/authController';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+const navy = '#0A234A';
+
+function LabMark() {
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <View style={styles.mark}>
+      {/* Clipboard Icon Body */}
+      <View style={styles.clipboard}>
+        <View style={styles.clipboardClip} />
+        <View style={styles.clipboardLine} />
+        <View style={styles.clipboardLine} />
+      </View>
+      {/* Check/Close Badge */}
+      <View style={styles.checkBadge}>
+        <Ionicons name="close" size={8} color="#FFFFFF" />
+      </View>
+    </View>
   );
 }
 
-export default function HomeScreen() {
+export default function LoginScreen() {
+  const router = useRouter();
+  const [username, setUsername] = useState('admin.cruz');
+  const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('Incorrect username or password.');
+
+  const handleLogin = () => {
+    const res = authController.login(username, password);
+
+    if (!res.success) {
+      setHasError(true);
+      setErrorMessage(res.error || 'Incorrect username or password.');
+      return;
+    }
+
+    setHasError(false);
+    router.replace(ROUTES.EQUIPMENT as any);
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <StatusBar style="dark" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Brand section */}
+          <View style={styles.brandSection}>
+            <LabMark />
+            <Text style={styles.brandTitle}>LabTrack</Text>
+            <Text style={styles.brandSubtitle}>UMTC Engineering Laboratory</Text>
+          </View>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+          {/* Form section */}
+          <View style={styles.form}>
+            <Text style={styles.label}>Username</Text>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                accessibilityLabel="Username"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={username}
+                onChangeText={(val) => {
+                  setUsername(val);
+                  if (hasError) setHasError(false);
+                }}
+                placeholder="admin.cruz"
+                placeholderTextColor="#9DA8B7"
+                returnKeyType="next"
+                style={styles.textInput}
+              />
+            </View>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
+            <Text style={[styles.label, styles.passwordLabel]}>Password</Text>
+            <View
+              style={[
+                styles.inputWrapper,
+                hasError ? styles.inputWrapperError : null,
+              ]}
+            >
+              <TextInput
+                accessibilityLabel="Password"
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={password}
+                onChangeText={(val) => {
+                  setPassword(val);
+                  if (hasError) setHasError(false);
+                }}
+                onSubmitEditing={handleLogin}
+                placeholder="••••••••"
+                placeholderTextColor="#9DA8B7"
+                returnKeyType="go"
+                secureTextEntry={!passwordVisible}
+                style={styles.textInput}
+              />
+              <Pressable
+                accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
+                hitSlop={10}
+                onPress={() => setPasswordVisible((v) => !v)}
+              >
+                <Ionicons
+                  name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={18}
+                  color="#9DA8B7"
+                />
+              </Pressable>
+            </View>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+            {hasError ? (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            ) : null}
+
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleLogin}
+              style={({ pressed }) => [
+                styles.loginButton,
+                pressed && styles.loginButtonPressed,
+              ]}
+            >
+              <Text style={styles.loginText}>Log In</Text>
+            </Pressable>
+
+            <Text style={styles.helpText}>Forgot your login? Contact your Lab Admin.</Text>
+          </View>
+
+          {/* Offline version label */}
+          <View style={styles.footer}>
+            <Text style={styles.versionText}>v1.0.0 · Offline</Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    backgroundColor: '#FFFFFF',
   },
-  heroSection: {
+  keyboardView: {
+    flex: 1,
+  },
+  content: {
+    flexGrow: 1,
+    paddingHorizontal: 36,
+    paddingTop: 60,
+    paddingBottom: 24,
+  },
+  brandSection: {
+    alignItems: 'flex-start',
+    marginBottom: 32,
+  },
+  mark: {
+    width: 52,
+    height: 52,
+    borderRadius: 8,
+    backgroundColor: navy,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
+  },
+  clipboard: {
+    width: 22,
+    height: 22,
+    borderRadius: 3,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    paddingTop: 6,
+    alignItems: 'center',
+    gap: 3,
+  },
+  clipboardClip: {
+    position: 'absolute',
+    top: -5,
+    width: 10,
+    height: 5,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    borderRadius: 2,
+    backgroundColor: navy,
+  },
+  clipboardLine: {
+    width: 12,
+    height: 1.25,
+    backgroundColor: '#FFFFFF',
+  },
+  checkBadge: {
+    position: 'absolute',
+    right: 11,
+    bottom: 11,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: navy,
+    borderWidth: 1.25,
+    borderColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandTitle: {
+    color: navy,
+    fontSize: 24,
+    fontWeight: '700',
+    lineHeight: 28,
+  },
+  brandSubtitle: {
+    color: '#59708F',
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 2,
+  },
+  form: {
+    width: '100%',
+  },
+  label: {
+    color: '#0F1725',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  passwordLabel: {
+    marginTop: 18,
+  },
+  inputWrapper: {
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D9DDE4',
+    backgroundColor: '#F4F5F7',
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inputWrapperError: {
+    borderColor: '#EF4444',
+  },
+  textInput: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    color: navy,
+    fontSize: 13,
+    height: '100%',
+    padding: 0,
   },
-  title: {
-    textAlign: 'center',
+  errorText: {
+    color: '#DC2626',
+    fontSize: 11,
+    marginTop: 6,
   },
-  code: {
-    textTransform: 'uppercase',
+  loginButton: {
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: navy,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  loginButtonPressed: {
+    opacity: 0.85,
+  },
+  loginText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  helpText: {
+    color: '#5D6F8A',
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 16,
+  },
+  footer: {
+    marginTop: 'auto',
+    alignItems: 'center',
+    paddingTop: 36,
+  },
+  versionText: {
+    color: '#96A1B5',
+    fontSize: 11,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
 });
