@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
   StyleSheet,
   ScrollView,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -24,7 +24,10 @@ export default function EditEquipmentScreen() {
   const router = useRouter();
   const { equipment, loading: fetching } = useEquipmentDetail(id);
 
+  const [productId, setProductId] = useState('');
   const [name, setName] = useState('');
+  const [brand, setBrand] = useState('');
+  const [model, setModel] = useState('');
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -33,7 +36,10 @@ export default function EditEquipmentScreen() {
 
   useEffect(() => {
     if (equipment) {
+      setProductId(equipment.product_id || '');
       setName(equipment.name);
+      setBrand(equipment.brand || '');
+      setModel(equipment.model || '');
       setDescription(equipment.description || '');
       setQuantity(equipment.total_quantity);
     }
@@ -47,7 +53,10 @@ export default function EditEquipmentScreen() {
       setErrors({});
 
       const res = await equipmentController.update(equipment.id, {
+        product_id: productId.trim(),
         name,
+        brand,
+        model,
         description,
         total_quantity: quantity,
       });
@@ -138,6 +147,13 @@ export default function EditEquipmentScreen() {
           showsVerticalScrollIndicator={false}
         >
           <Input
+            label="Product ID / Asset Tag"
+            value={productId}
+            onChangeText={setProductId}
+            autoCapitalize="characters"
+          />
+
+          <Input
             label="Equipment Name"
             value={name}
             onChangeText={(val) => {
@@ -148,11 +164,23 @@ export default function EditEquipmentScreen() {
           />
 
           <Input
-            label="Description"
+            label="Brand / Manufacturer"
+            value={brand}
+            onChangeText={setBrand}
+          />
+
+          <Input
+            label="Model / Number"
+            value={model}
+            onChangeText={setModel}
+          />
+
+          <Input
+            label="Description & Specifications"
             value={description}
             onChangeText={setDescription}
             multiline
-            numberOfLines={4}
+            numberOfLines={3}
           />
 
           <QuantityStepper

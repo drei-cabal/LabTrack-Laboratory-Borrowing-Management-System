@@ -99,6 +99,32 @@ export default function EquipmentDetailScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScreenHeader title={equipment.name} showBack />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Specs and Product ID Card */}
+        <View style={styles.specsCard}>
+          {equipment.product_id ? (
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>PRODUCT ID</Text>
+              <View style={styles.productIdBadge}>
+                <Text style={styles.productIdText}>{equipment.product_id}</Text>
+              </View>
+            </View>
+          ) : null}
+
+          {equipment.brand ? (
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>BRAND</Text>
+              <Text style={styles.specValue}>{equipment.brand}</Text>
+            </View>
+          ) : null}
+
+          {equipment.model ? (
+            <View style={styles.specRow}>
+              <Text style={styles.specLabel}>MODEL</Text>
+              <Text style={styles.specValue}>{equipment.model}</Text>
+            </View>
+          ) : null}
+        </View>
+
         {/* Description section */}
         <View style={styles.descriptionSection}>
           <Text style={styles.sectionLabel}>DESCRIPTION</Text>
@@ -175,6 +201,42 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     minWidth: 120,
+  },
+  specsCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  specRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  specLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: AppColors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  specValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  productIdBadge: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  productIdText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: AppColors.navy,
   },
   descriptionSection: {
     marginBottom: 20,

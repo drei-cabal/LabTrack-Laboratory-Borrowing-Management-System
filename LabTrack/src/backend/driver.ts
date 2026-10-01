@@ -24,7 +24,10 @@ export class MemoryDatabaseDriver implements DatabaseDriver {
     this.equipments = [
       {
         id: 'eq-1',
+        product_id: 'EQ-001',
         name: 'Digital Multimeter',
+        brand: 'Fluke',
+        model: '117 True RMS',
         description: 'Fluke 117 True RMS, auto-ranging',
         total_quantity: 5,
         created_at: new Date('2026-09-01').toISOString(),
@@ -32,7 +35,10 @@ export class MemoryDatabaseDriver implements DatabaseDriver {
       },
       {
         id: 'eq-2',
+        product_id: 'EQ-002',
         name: 'Oscilloscope',
+        brand: 'Rigol',
+        model: 'DS1054Z',
         description: 'Rigol DS1054Z, 4-channel 50MHz',
         total_quantity: 2,
         created_at: new Date('2026-09-02').toISOString(),
@@ -40,7 +46,10 @@ export class MemoryDatabaseDriver implements DatabaseDriver {
       },
       {
         id: 'eq-3',
+        product_id: 'EQ-003',
         name: 'Function Generator',
+        brand: 'Rigol',
+        model: 'DG1022Z',
         description: 'Rigol DG1022Z, 25MHz dual-channel',
         total_quantity: 3,
         created_at: new Date('2026-09-03').toISOString(),
@@ -48,7 +57,10 @@ export class MemoryDatabaseDriver implements DatabaseDriver {
       },
       {
         id: 'eq-4',
+        product_id: 'EQ-004',
         name: 'Soldering Iron Station',
+        brand: 'Hakko',
+        model: 'FX-888D',
         description: 'Hakko FX-888D temperature-controlled',
         total_quantity: 4,
         created_at: new Date('2026-09-04').toISOString(),
@@ -154,10 +166,14 @@ export class MemoryDatabaseDriver implements DatabaseDriver {
   async runAsync(query: string, params: any[] = []): Promise<{ changes: number; lastInsertRowId: number }> {
     const q = query.toLowerCase().trim();
     if (q.startsWith('insert into equipment')) {
-      const [id, name, description, total_quantity, created_at, updated_at] = params;
+      // params: [id, product_id, name, brand, model, description, total_quantity, created_at, updated_at]
+      const [id, product_id, name, brand, model, description, total_quantity, created_at, updated_at] = params;
       this.equipments.unshift({
         id,
+        product_id: product_id || `EQ-${Date.now().toString().slice(-4)}`,
         name,
+        brand: brand || '',
+        model: model || '',
         description: description || '',
         total_quantity: Number(total_quantity) || 1,
         created_at: created_at || new Date().toISOString(),
@@ -166,12 +182,16 @@ export class MemoryDatabaseDriver implements DatabaseDriver {
       return { changes: 1, lastInsertRowId: this.equipments.length };
     }
     if (q.startsWith('update equipment')) {
-      const [name, description, total_quantity, updated_at, id] = params;
+      // params: [product_id, name, brand, model, description, total_quantity, updated_at, id]
+      const [product_id, name, brand, model, description, total_quantity, updated_at, id] = params;
       const idx = this.equipments.findIndex((e) => e.id === id);
       if (idx !== -1) {
         this.equipments[idx] = {
           ...this.equipments[idx],
+          product_id: product_id || this.equipments[idx].product_id,
           name,
+          brand: brand || '',
+          model: model || '',
           description: description || '',
           total_quantity: Number(total_quantity),
           updated_at: updated_at || new Date().toISOString(),

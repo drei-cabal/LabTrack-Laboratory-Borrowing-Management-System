@@ -11,7 +11,10 @@ import { ROUTES } from '../../routing/routes';
 
 export default function AddEquipmentScreen() {
   const router = useRouter();
+  const [productId, setProductId] = useState('');
   const [name, setName] = useState('');
+  const [brand, setBrand] = useState('');
+  const [model, setModel] = useState('');
   const [description, setDescription] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -22,9 +25,15 @@ export default function AddEquipmentScreen() {
       setLoading(true);
       setErrors({});
 
+      // Combine description with model/brand if description is empty or use description directly
+      const displayDesc = description.trim() || [brand, model].filter(Boolean).join(' ') || 'Standard lab equipment';
+
       const res = await equipmentController.create({
+        product_id: productId.trim(),
         name,
-        description,
+        brand,
+        model,
+        description: displayDesc,
         total_quantity: quantity,
       });
 
@@ -63,6 +72,16 @@ export default function AddEquipmentScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {/* Product ID */}
+          <Input
+            label="Product ID / Asset Tag"
+            placeholder="e.g. EQ-2026-001"
+            value={productId}
+            onChangeText={setProductId}
+            autoCapitalize="characters"
+          />
+
+          {/* Equipment Name */}
           <Input
             label="Equipment Name"
             placeholder="e.g. Digital Multimeter"
@@ -72,18 +91,35 @@ export default function AddEquipmentScreen() {
               if (errors.name) setErrors((prev) => ({ ...prev, name: '' }));
             }}
             error={errors.name}
-            autoFocus
           />
 
+          {/* Brand */}
           <Input
-            label="Description"
-            placeholder="Model, brand, or notes about this item"
+            label="Brand / Manufacturer"
+            placeholder="e.g. Fluke, Rigol, Hakko"
+            value={brand}
+            onChangeText={setBrand}
+          />
+
+          {/* Model */}
+          <Input
+            label="Model / Number"
+            placeholder="e.g. 117 True RMS, DS1054Z"
+            value={model}
+            onChangeText={setModel}
+          />
+
+          {/* Description / Notes */}
+          <Input
+            label="Description & Specifications"
+            placeholder="Additional notes, specifications, or location notes"
             value={description}
             onChangeText={setDescription}
             multiline
-            numberOfLines={4}
+            numberOfLines={3}
           />
 
+          {/* Quantity Stepper */}
           <QuantityStepper
             label="Total Quantity"
             value={quantity}

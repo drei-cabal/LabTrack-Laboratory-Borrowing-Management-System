@@ -4,7 +4,10 @@ export type BorrowStatus = 'borrowed' | 'overdue' | 'returned';
 
 export interface EquipmentEntity {
   id: string;
+  product_id?: string;
   name: string;
+  brand?: string;
+  model?: string;
   description: string;
   total_quantity: number;
   created_at: string;

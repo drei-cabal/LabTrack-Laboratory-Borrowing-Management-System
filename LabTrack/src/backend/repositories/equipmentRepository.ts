@@ -81,33 +81,59 @@ export class EquipmentRepository {
     );
   }
 
-  async create(name: string, description: string, total_quantity: number): Promise<EquipmentEntity> {
+  async create(data: {
+    product_id?: string;
+    name: string;
+    brand?: string;
+    model?: string;
+    description: string;
+    total_quantity: number;
+  }): Promise<EquipmentEntity> {
     const db = await getDatabase();
     const id = 'eq-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+    const product_id = data.product_id?.trim() || `EQ-${Date.now().toString().slice(-4)}`;
+    const brand = data.brand?.trim() || '';
+    const model = data.model?.trim() || '';
     const now = new Date().toISOString();
 
     await db.runAsync(
-      'INSERT INTO equipment (id, name, description, total_quantity, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?);',
-      [id, name, description, total_quantity, now, now]
+      'INSERT INTO equipment (id, product_id, name, brand, model, description, total_quantity, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);',
+      [id, product_id, data.name, brand, model, data.description, data.total_quantity, now, now]
     );
 
     return {
       id,
-      name,
-      description,
-      total_quantity,
+      product_id,
+      name: data.name,
+      brand,
+      model,
+      description: data.description,
+      total_quantity: data.total_quantity,
       created_at: now,
       updated_at: now,
     };
   }
 
-  async update(id: string, name: string, description: string, total_quantity: number): Promise<boolean> {
+  async update(
+    id: string,
+    data: {
+      product_id?: string;
+      name: string;
+      brand?: string;
+      model?: string;
+      description: string;
+      total_quantity: number;
+    }
+  ): Promise<boolean> {
     const db = await getDatabase();
     const now = new Date().toISOString();
+    const product_id = data.product_id?.trim() || '';
+    const brand = data.brand?.trim() || '';
+    const model = data.model?.trim() || '';
 
     const result = await db.runAsync(
-      'UPDATE equipment SET name = ?, description = ?, total_quantity = ?, updated_at = ? WHERE id = ?;',
-      [name, description, total_quantity, now, id]
+      'UPDATE equipment SET product_id = ?, name = ?, brand = ?, model = ?, description = ?, total_quantity = ?, updated_at = ? WHERE id = ?;',
+      [product_id, data.name, brand, model, data.description, data.total_quantity, now, id]
     );
 
     return result.changes > 0;

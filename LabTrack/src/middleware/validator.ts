@@ -4,7 +4,10 @@ export interface ValidationResult {
 }
 
 export function validateEquipmentInput(data: {
+  product_id?: string;
   name?: string;
+  brand?: string;
+  model?: string;
   description?: string;
   total_quantity?: number;
 }): ValidationResult {

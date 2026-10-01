@@ -28,7 +28,10 @@ export class EquipmentController {
         items = items.filter(
           (item) =>
             item.name.toLowerCase().includes(query) ||
-            item.description.toLowerCase().includes(query)
+            item.description.toLowerCase().includes(query) ||
+            (item.product_id && item.product_id.toLowerCase().includes(query)) ||
+            (item.brand && item.brand.toLowerCase().includes(query)) ||
+            (item.model && item.model.toLowerCase().includes(query))
         );
       }
 
@@ -67,7 +70,10 @@ export class EquipmentController {
   }
 
   async create(data: {
+    product_id?: string;
     name: string;
+    brand?: string;
+    model?: string;
     description: string;
     total_quantity: number;
   }): Promise<ApiResponse<EquipmentWithDetails>> {
@@ -85,11 +91,14 @@ export class EquipmentController {
         };
       }
 
-      const created = await equipmentRepository.create(
-        data.name.trim(),
-        data.description.trim(),
-        Number(data.total_quantity)
-      );
+      const created = await equipmentRepository.create({
+        product_id: data.product_id,
+        name: data.name.trim(),
+        brand: data.brand?.trim(),
+        model: data.model?.trim(),
+        description: data.description.trim(),
+        total_quantity: Number(data.total_quantity),
+      });
 
       const withDetails: EquipmentWithDetails = {
         ...created,
@@ -107,7 +116,10 @@ export class EquipmentController {
   async update(
     id: string,
     data: {
+      product_id?: string;
       name: string;
+      brand?: string;
+      model?: string;
       description: string;
       total_quantity: number;
     }
@@ -136,12 +148,14 @@ export class EquipmentController {
         };
       }
 
-      const success = await equipmentRepository.update(
-        id,
-        data.name.trim(),
-        data.description.trim(),
-        Number(data.total_quantity)
-      );
+      const success = await equipmentRepository.update(id, {
+        product_id: data.product_id,
+        name: data.name.trim(),
+        brand: data.brand?.trim(),
+        model: data.model?.trim(),
+        description: data.description.trim(),
+        total_quantity: Number(data.total_quantity),
+      });
 
       if (!success) {
         return {

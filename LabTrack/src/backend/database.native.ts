@@ -14,7 +14,10 @@ class NativeSQLiteDriver implements DatabaseDriver {
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS equipment (
         id TEXT PRIMARY KEY NOT NULL,
+        product_id TEXT,
         name TEXT NOT NULL,
+        brand TEXT,
+        model TEXT,
         description TEXT,
         total_quantity INTEGER NOT NULL DEFAULT 1,
         created_at TEXT NOT NULL,
@@ -35,6 +38,17 @@ class NativeSQLiteDriver implements DatabaseDriver {
       );
     `);
 
+    // Ensure columns exist if table was previously created
+    try {
+      await this.db.execAsync(`
+        ALTER TABLE equipment ADD COLUMN product_id TEXT;
+        ALTER TABLE equipment ADD COLUMN brand TEXT;
+        ALTER TABLE equipment ADD COLUMN model TEXT;
+      `);
+    } catch {
+      // Columns may already exist
+    }
+
     const countResult = await this.db.getFirstAsync<{ count: number }>(
       'SELECT count(*) as count FROM equipment;'
     );
@@ -48,11 +62,11 @@ class NativeSQLiteDriver implements DatabaseDriver {
     if (!this.db) return;
 
     await this.db.runAsync(
-      `INSERT INTO equipment (id, name, description, total_quantity, created_at, updated_at) VALUES
-        ('eq-1', 'Digital Multimeter', 'Fluke 117 True RMS, auto-ranging', 5, '2026-09-01T00:00:00Z', '2026-09-01T00:00:00Z'),
-        ('eq-2', 'Oscilloscope', 'Rigol DS1054Z, 4-channel 50MHz', 2, '2026-09-02T00:00:00Z', '2026-09-02T00:00:00Z'),
-        ('eq-3', 'Function Generator', 'Rigol DG1022Z, 25MHz dual-channel', 3, '2026-09-03T00:00:00Z', '2026-09-03T00:00:00Z'),
-        ('eq-4', 'Soldering Iron Station', 'Hakko FX-888D temperature-controlled', 4, '2026-09-04T00:00:00Z', '2026-09-04T00:00:00Z');`
+      `INSERT INTO equipment (id, product_id, name, brand, model, description, total_quantity, created_at, updated_at) VALUES
+        ('eq-1', 'EQ-001', 'Digital Multimeter', 'Fluke', '117 True RMS', 'Fluke 117 True RMS, auto-ranging', 5, '2026-09-01T00:00:00Z', '2026-09-01T00:00:00Z'),
+        ('eq-2', 'EQ-002', 'Oscilloscope', 'Rigol', 'DS1054Z', 'Rigol DS1054Z, 4-channel 50MHz', 2, '2026-09-02T00:00:00Z', '2026-09-02T00:00:00Z'),
+        ('eq-3', 'EQ-003', 'Function Generator', 'Rigol', 'DG1022Z', 'Rigol DG1022Z, 25MHz dual-channel', 3, '2026-09-03T00:00:00Z', '2026-09-03T00:00:00Z'),
+        ('eq-4', 'EQ-004', 'Soldering Iron Station', 'Hakko', 'FX-888D', 'Hakko FX-888D temperature-controlled', 4, '2026-09-04T00:00:00Z', '2026-09-04T00:00:00Z');`
     );
 
     await this.db.runAsync(

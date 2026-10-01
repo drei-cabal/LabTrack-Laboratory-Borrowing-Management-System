@@ -11,6 +11,8 @@ export interface EquipmentCardProps {
 }
 
 export function EquipmentCard({ item, onPress }: EquipmentCardProps) {
+  const subtitle = [item.brand, item.model].filter(Boolean).join(' ') || item.description || 'No notes';
+
   return (
     <Pressable
       onPress={onPress}
@@ -23,11 +25,18 @@ export function EquipmentCard({ item, onPress }: EquipmentCardProps) {
     >
       <View style={styles.topRow}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
-            {item.name}
-          </Text>
+          <View style={styles.nameRow}>
+            {item.product_id ? (
+              <View style={styles.productIdBadge}>
+                <Text style={styles.productIdText}>{item.product_id}</Text>
+              </View>
+            ) : null}
+            <Text style={styles.title} numberOfLines={1}>
+              {item.name}
+            </Text>
+          </View>
           <Text style={styles.description} numberOfLines={1}>
-            {item.description || 'No description provided'}
+            {subtitle}
           </Text>
         </View>
         <StatusBadge status={item.status} />
@@ -68,11 +77,30 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 3,
+  },
+  productIdBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  productIdText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: AppColors.navy,
+  },
   title: {
     fontSize: 15,
     fontWeight: '700',
     color: AppColors.text,
-    marginBottom: 3,
+    flex: 1,
   },
   description: {
     fontSize: 12,
