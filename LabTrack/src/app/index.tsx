@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ROUTES } from '../routing/routes';
 
-import { authController } from '../server/controllers/authController';
+import { authService } from '../services/authService';
 
 const navy = '#0A234A';
 
@@ -43,18 +43,25 @@ export default function LoginScreen() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('Incorrect username or password.');
+  const [loggingIn, setLoggingIn] = useState(false);
 
-  const handleLogin = () => {
-    const res = authController.login(username, password);
+  const handleLogin = async () => {
+    try {
+      setLoggingIn(true);
+      setHasError(false);
 
-    if (!res.success) {
-      setHasError(true);
-      setErrorMessage(res.error || 'Incorrect username or password.');
-      return;
+      const res = await authService.login({ username, password });
+
+      if (!res.success) {
+        setHasError(true);
+        setErrorMessage(res.error || 'Incorrect username or password.');
+        return;
+      }
+
+      router.replace(ROUTES.EQUIPMENT as any);
+    } finally {
+      setLoggingIn(false);
     }
-
-    setHasError(false);
-    router.replace(ROUTES.EQUIPMENT as any);
   };
 
   return (
@@ -139,12 +146,13 @@ export default function LoginScreen() {
             <Pressable
               accessibilityRole="button"
               onPress={handleLogin}
+              disabled={loggingIn}
               style={({ pressed }) => [
                 styles.loginButton,
-                pressed && styles.loginButtonPressed,
+                (pressed || loggingIn) && styles.loginButtonPressed,
               ]}
             >
-              <Text style={styles.loginText}>Log In</Text>
+              <Text style={styles.loginText}>{loggingIn ? 'Signing in…' : 'Log In'}</Text>
             </Pressable>
 
             <Text style={styles.helpText}>Forgot your login? Contact your Lab Admin.</Text>

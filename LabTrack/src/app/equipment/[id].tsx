@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEquipmentDetail } from '../../hooks/useEquipmentDetail';
-import { equipmentController } from '../../server/controllers/equipmentController';
+import { equipmentService } from '../../services/equipmentService';
 import { AppColors } from '../../constants/colors';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { StatsSummary } from '../../components/equipment/StatsSummary';
@@ -49,7 +49,7 @@ export default function EquipmentDetailScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const res = await equipmentController.delete(equipment.id);
+            const res = await equipmentService.delete(equipment.id);
             if (res.success) {
               Alert.alert('Deleted', 'Equipment has been removed.', [
                 {

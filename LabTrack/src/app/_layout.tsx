@@ -4,7 +4,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { getDatabase } from '../backend/database';
 import { AppColors } from '../constants/colors';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -13,18 +12,10 @@ export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        await getDatabase();
-      } catch (e) {
-        console.error('Failed to initialize database', e);
-      } finally {
-        setIsReady(true);
-        await SplashScreen.hideAsync().catch(() => {});
-      }
-    }
-
-    prepare();
+    // No local DB init needed — data comes from the REST API server
+    SplashScreen.hideAsync()
+      .catch(() => {})
+      .finally(() => setIsReady(true));
   }, []);
 
   if (!isReady) {

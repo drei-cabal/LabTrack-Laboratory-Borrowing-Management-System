@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { equipmentController } from '../server/controllers/equipmentController';
+import { equipmentService } from '../services/equipmentService';
 import { EquipmentWithDetails } from '../backend/types';
 import { FilterOption } from '../components/ui/FilterChips';
 
@@ -14,18 +14,15 @@ export function useEquipment() {
     try {
       setLoading(true);
       setError(null);
-      const res = await equipmentController.getAll({
-        search,
-        filter,
-      });
+      const res = await equipmentService.getAll({ search, filter });
 
       if (res.success && res.data) {
         setItems(res.data);
       } else {
         setError(res.error || 'Failed to load equipment.');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch equipment.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch equipment.');
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { equipmentController } from '../../server/controllers/equipmentController';
+import { equipmentService } from '../../services/equipmentService';
 import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { Input } from '../../components/ui/Input';
 import { QuantityStepper } from '../../components/ui/QuantityStepper';
@@ -28,7 +28,7 @@ export default function AddEquipmentScreen() {
       // Combine description with model/brand if description is empty or use description directly
       const displayDesc = description.trim() || [brand, model].filter(Boolean).join(' ') || 'Standard lab equipment';
 
-      const res = await equipmentController.create({
+      const res = await equipmentService.create({
         product_id: productId.trim(),
         name,
         brand,

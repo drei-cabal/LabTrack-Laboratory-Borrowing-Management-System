@@ -2,8 +2,11 @@
   "name": "labtrack-workspace",
   "version": "1.0.0",
   "private": true,
-  "description": "Root launcher for the LabTrack Expo application.",
+  "description": "Root workspace for LabTrack Expo application and REST API server.",
   "scripts": {
+    "server": "npm --prefix ./server run dev",
+    "server:build": "npm --prefix ./server run build",
+    "server:start": "npm --prefix ./server run start",
     "start": "npm --prefix ./LabTrack run start",
     "android": "npm --prefix ./LabTrack run android",
     "ios": "npm --prefix ./LabTrack run ios",

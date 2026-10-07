@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEquipmentDetail } from '../../../hooks/useEquipmentDetail';
-import { equipmentController } from '../../../server/controllers/equipmentController';
+import { equipmentService } from '../../../services/equipmentService';
 import { AppColors } from '../../../constants/colors';
 import { ScreenHeader } from '../../../components/ui/ScreenHeader';
 import { Input } from '../../../components/ui/Input';
@@ -52,7 +52,7 @@ export default function EditEquipmentScreen() {
       setSaving(true);
       setErrors({});
 
-      const res = await equipmentController.update(equipment.id, {
+      const res = await equipmentService.update(equipment.id, {
         product_id: productId.trim(),
         name,
         brand,
@@ -105,7 +105,7 @@ export default function EditEquipmentScreen() {
           style: 'destructive',
           onPress: async () => {
             setDeleting(true);
-            const res = await equipmentController.delete(equipment.id);
+            const res = await equipmentService.delete(equipment.id);
             setDeleting(false);
             if (res.success) {
               Alert.alert('Deleted', 'Equipment has been removed.', [

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { equipmentController } from '../server/controllers/equipmentController';
+import { equipmentService } from '../services/equipmentService';
 import { EquipmentWithDetails, BorrowRecordEntity } from '../backend/types';
 
 export function useEquipmentDetail(id: string | undefined) {
@@ -13,15 +13,15 @@ export function useEquipmentDetail(id: string | undefined) {
     try {
       setLoading(true);
       setError(null);
-      const res = await equipmentController.getById(id);
+      const res = await equipmentService.getById(id);
       if (res.success && res.data) {
         setEquipment(res.data.equipment);
         setActiveRecords(res.data.activeRecords);
       } else {
         setError(res.error || 'Failed to load details.');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch details.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch details.');
     } finally {
       setLoading(false);
     }
