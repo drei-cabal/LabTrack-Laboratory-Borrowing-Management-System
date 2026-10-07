@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { EquipmentWithDetails } from '../../backend/types';
+import { EquipmentWithDetails } from '../../types';
 import { AppColors } from '../../constants/colors';
 import { StatusBadge } from '../ui/StatusBadge';
 import { ProgressBar } from '../ui/ProgressBar';

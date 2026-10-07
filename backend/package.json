@@ -1,7 +1,7 @@
 {
-  "name": "labtrack-server",
+  "name": "labtrack-backend",
   "version": "1.0.0",
-  "description": "LabTrack REST API Server",
+  "description": "LabTrack Backend REST API Server",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { equipmentService } from '../services/equipmentService';
-import { EquipmentWithDetails, BorrowRecordEntity } from '../backend/types';
+import { EquipmentWithDetails, BorrowRecordEntity } from '../types';
 
 export function useEquipmentDetail(id: string | undefined) {
   const [equipment, setEquipment] = useState<EquipmentWithDetails | null>(null);

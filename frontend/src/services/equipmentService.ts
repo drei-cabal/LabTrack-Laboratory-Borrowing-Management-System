@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { EquipmentWithDetails, BorrowRecordEntity } from '../backend/types';
+import type { EquipmentWithDetails, BorrowRecordEntity } from '../types';
 
 export interface EquipmentDetailPayload {
   equipment: EquipmentWithDetails;

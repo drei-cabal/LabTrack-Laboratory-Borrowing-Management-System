@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { equipmentService } from '../services/equipmentService';
-import { EquipmentWithDetails } from '../backend/types';
+import { EquipmentWithDetails } from '../types';
 import { FilterOption } from '../components/ui/FilterChips';
 
 export function useEquipment() {

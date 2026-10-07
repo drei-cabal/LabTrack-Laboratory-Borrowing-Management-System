@@ -2,15 +2,16 @@
   "name": "labtrack-workspace",
   "version": "1.0.0",
   "private": true,
-  "description": "Root workspace for LabTrack Expo application and REST API server.",
+  "description": "Root workspace for LabTrack frontend (Expo) and backend (Express REST API).",
   "scripts": {
-    "server": "npm --prefix ./server run dev",
-    "server:build": "npm --prefix ./server run build",
-    "server:start": "npm --prefix ./server run start",
-    "start": "npm --prefix ./LabTrack run start",
-    "android": "npm --prefix ./LabTrack run android",
-    "ios": "npm --prefix ./LabTrack run ios",
-    "web": "npm --prefix ./LabTrack run web",
-    "lint": "npm --prefix ./LabTrack run lint"
+    "backend": "npm --prefix ./backend run dev",
+    "backend:build": "npm --prefix ./backend run build",
+    "backend:start": "npm --prefix ./backend run start",
+    "server": "npm --prefix ./backend run dev",
+    "start": "npm --prefix ./frontend run start",
+    "android": "npm --prefix ./frontend run android",
+    "ios": "npm --prefix ./frontend run ios",
+    "web": "npm --prefix ./frontend run web",
+    "lint": "npm --prefix ./frontend run lint"
   }
 }

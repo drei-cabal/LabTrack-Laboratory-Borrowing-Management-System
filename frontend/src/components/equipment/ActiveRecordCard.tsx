@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { BorrowRecordEntity } from '../../backend/types';
+import { BorrowRecordEntity } from '../../types';
 import { AppColors } from '../../constants/colors';
 import { StatusBadge } from '../ui/StatusBadge';
 
