@@ -41,6 +41,7 @@ export default function RootLayout() {
         <Stack.Screen name="equipment/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="equipment/add" options={{ headerShown: false }} />
         <Stack.Screen name="equipment/edit/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="borrow/new" options={{ headerShown: false }} />
       </Stack>
     </SafeAreaProvider>
   );

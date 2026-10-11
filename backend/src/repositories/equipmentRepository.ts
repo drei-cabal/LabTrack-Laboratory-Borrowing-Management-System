@@ -27,11 +27,15 @@ interface BorrowRecordRow {
   equipment_id: string;
   borrower_name: string;
   borrower_id: string;
+  purpose?: string | null;
   borrow_date: string;
   due_date: string;
   return_date: string | null;
   status: string;
   notes: string | null;
+  authorized_by?: string | null;
+  photo_proof?: string | null;
+  quantity?: number | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -70,11 +74,15 @@ function mapBorrowRow(row: BorrowRecordRow): BorrowRecordEntity {
     equipment_id: row.equipment_id,
     borrower_name: row.borrower_name,
     borrower_id: row.borrower_id,
+    purpose: row.purpose ?? undefined,
     borrow_date: row.borrow_date,
     due_date: row.due_date,
     return_date: row.return_date ?? undefined,
     status: row.status as BorrowRecordEntity['status'],
     notes: row.notes ?? undefined,
+    authorized_by: row.authorized_by ?? undefined,
+    photo_proof: row.photo_proof ?? undefined,
+    quantity: row.quantity ?? 1,
   };
 }
 
@@ -88,7 +96,7 @@ export function getAll(): EquipmentWithDetails[] {
     SELECT
       e.*,
       COALESCE((
-        SELECT COUNT(*)
+        SELECT SUM(COALESCE(br.quantity, 1))
         FROM borrow_records br
         WHERE br.equipment_id = e.id
           AND br.status IN ('borrowed', 'overdue')
@@ -108,7 +116,7 @@ export function getById(id: string): EquipmentWithDetails | null {
     SELECT
       e.*,
       COALESCE((
-        SELECT COUNT(*)
+        SELECT SUM(COALESCE(br.quantity, 1))
         FROM borrow_records br
         WHERE br.equipment_id = e.id
           AND br.status IN ('borrowed', 'overdue')
