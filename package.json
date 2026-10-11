@@ -1,0 +1,17 @@
+{
+  "name": "labtrack-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root workspace for LabTrack frontend (Expo) and backend (Express REST API).",
+  "scripts": {
+    "backend": "npm --prefix ./backend run dev",
+    "backend:build": "npm --prefix ./backend run build",
+    "backend:start": "npm --prefix ./backend run start",
+    "server": "npm --prefix ./backend run dev",
+    "start": "npm --prefix ./frontend run start",
+    "android": "npm --prefix ./frontend run android",
+    "ios": "npm --prefix ./frontend run ios",
+    "web": "npm --prefix ./frontend run web",
+    "lint": "npm --prefix ./frontend run lint"
+  }
+}
