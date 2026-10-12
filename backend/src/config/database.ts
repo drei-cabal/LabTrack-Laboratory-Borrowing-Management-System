@@ -108,7 +108,9 @@ const SCHEMA = `
     id TEXT PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'staff',
+    role TEXT NOT NULL DEFAULT 'assistant',
+    full_name TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
   );
 
@@ -147,6 +149,8 @@ const SCHEMA = `
 
 function migrateSchema(db: SqlJsDatabase): void {
   const columnsToAdd = [
+    'ALTER TABLE users ADD COLUMN full_name TEXT',
+    'ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE borrow_records ADD COLUMN transaction_code TEXT',
     'ALTER TABLE borrow_records ADD COLUMN purpose TEXT',
     'ALTER TABLE borrow_records ADD COLUMN authorized_by TEXT',
@@ -163,6 +167,62 @@ function migrateSchema(db: SqlJsDatabase): void {
       // Column already exists, safe to ignore
     }
   }
+
+  // Backfill full_name on users if null
+  try {
+    db.exec(`
+      UPDATE users SET full_name = 'Prof. Eduardo Cruz' WHERE username = 'admin.cruz' AND (full_name IS NULL OR full_name = '');
+      UPDATE users SET full_name = 'Karen Dela Cruz' WHERE username = 'k.delacruz' AND (full_name IS NULL OR full_name = '');
+      UPDATE users SET full_name = 'Marco Villanueva' WHERE username = 'm.villanueva' AND (full_name IS NULL OR full_name = '');
+      UPDATE users SET full_name = 'Rina Pascual' WHERE username = 'r.pascual' AND (full_name IS NULL OR full_name = '');
+      UPDATE users SET full_name = username WHERE full_name IS NULL OR full_name = '';
+    `);
+
+    // Ensure Figma staff members exist
+    const defaultStaff = [
+      {
+        full_name: 'Prof. Eduardo Cruz',
+        username: 'admin.cruz',
+        password: 'admin123',
+        role: 'admin',
+        is_active: 1,
+      },
+      {
+        full_name: 'Karen Dela Cruz',
+        username: 'k.delacruz',
+        password: 'staff123',
+        role: 'assistant',
+        is_active: 1,
+      },
+      {
+        full_name: 'Marco Villanueva',
+        username: 'm.villanueva',
+        password: 'staff123',
+        role: 'assistant',
+        is_active: 1,
+      },
+      {
+        full_name: 'Rina Pascual',
+        username: 'r.pascual',
+        password: 'staff123',
+        role: 'assistant',
+        is_active: 0,
+      },
+    ];
+
+    for (const u of defaultStaff) {
+      const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(u.username);
+      if (!existing) {
+        const hash = bcrypt.hashSync(u.password, 10);
+        db.prepare(
+          'INSERT INTO users (id, username, password_hash, role, full_name, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).run(uuidv4(), u.username, hash, u.role, u.full_name, u.is_active, new Date().toISOString());
+      }
+    }
+  } catch {
+    // Ignore migration backfill errors
+  }
+
 
   // Backfill any missing transaction_code on existing rows
   try {
@@ -193,18 +253,43 @@ function seedIfEmpty(db: SqlJsDatabase): void {
 
   const now = new Date().toISOString();
 
-  // Users
+  // Users matching Figma Screen 1
   const insertUser = db.prepare(
-    'INSERT INTO users (id, username, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO users (id, username, password_hash, role, full_name, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
   );
   const usersToSeed = [
-    { username: 'admin.cruz', password: 'admin123', role: 'admin' },
-    { username: 'prof.cruz',  password: 'prof123',  role: 'staff' },
-    { username: 'admin',      password: 'admin123', role: 'admin' },
+    {
+      full_name: 'Prof. Eduardo Cruz',
+      username: 'admin.cruz',
+      password: 'admin123',
+      role: 'admin',
+      is_active: 1,
+    },
+    {
+      full_name: 'Karen Dela Cruz',
+      username: 'k.delacruz',
+      password: 'staff123',
+      role: 'assistant',
+      is_active: 1,
+    },
+    {
+      full_name: 'Marco Villanueva',
+      username: 'm.villanueva',
+      password: 'staff123',
+      role: 'assistant',
+      is_active: 1,
+    },
+    {
+      full_name: 'Rina Pascual',
+      username: 'r.pascual',
+      password: 'staff123',
+      role: 'assistant',
+      is_active: 0,
+    },
   ];
   for (const u of usersToSeed) {
     const hash = bcrypt.hashSync(u.password, 10);
-    insertUser.run(uuidv4(), u.username, hash, u.role, now);
+    insertUser.run(uuidv4(), u.username, hash, u.role, u.full_name, u.is_active, now);
   }
 
   // Equipment

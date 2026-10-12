@@ -21,7 +21,7 @@ export const tokenStore = {
     await SecureStore.setItemAsync(TOKEN_KEY, token);
   },
 
-  async getUser(): Promise<{ username: string; role: string } | null> {
+  async getUser(): Promise<{ username: string; role: string; id?: string; full_name?: string; is_active?: boolean } | null> {
     let raw: string | null;
     if (Platform.OS === 'web') {
       raw = webStore[USER_KEY] ?? null;
@@ -36,7 +36,7 @@ export const tokenStore = {
     }
   },
 
-  async setUser(user: { username: string; role: string }): Promise<void> {
+  async setUser(user: { username: string; role: string; id?: string; full_name?: string; is_active?: boolean }): Promise<void> {
     const raw = JSON.stringify(user);
     if (Platform.OS === 'web') {
       webStore[USER_KEY] = raw;
@@ -44,6 +44,7 @@ export const tokenStore = {
     }
     await SecureStore.setItemAsync(USER_KEY, raw);
   },
+
 
   async clear(): Promise<void> {
     if (Platform.OS === 'web') {

@@ -88,3 +88,32 @@ export interface ReturnTransactionPayload {
   return_date?: string;
   return_remarks?: string;
 }
+
+// ─── Staff ────────────────────────────────────────────────────────────────────
+
+export type StaffRole = 'admin' | 'assistant';
+
+export interface StaffEntity {
+  id: string;
+  username: string;
+  full_name: string;
+  role: StaffRole;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CreateStaffPayload {
+  username: string;
+  full_name: string;
+  password: string;
+  role: StaffRole;
+}
+
+export interface UpdateStaffPayload {
+  username?: string;
+  full_name?: string;
+  password?: string;
+  role?: StaffRole;
+  is_active?: boolean;
+}
+

@@ -93,15 +93,44 @@ export interface ReturnTransactionPayload {
   return_remarks?: string;
 }
 
-// ─── Users ────────────────────────────────────────────────────────────────────
+// ─── Users & Staff ────────────────────────────────────────────────────────────
+
+export type StaffRole = 'admin' | 'assistant' | 'staff';
 
 export interface UserEntity {
   id: string;
   username: string;
   password_hash: string;
-  role: 'admin' | 'staff';
+  role: StaffRole;
+  full_name?: string;
+  is_active: number;
   created_at: string;
 }
+
+export interface StaffEntity {
+  id: string;
+  username: string;
+  full_name: string;
+  role: StaffRole;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CreateStaffPayload {
+  username: string;
+  full_name: string;
+  password: string;
+  role: StaffRole;
+}
+
+export interface UpdateStaffPayload {
+  username?: string;
+  full_name?: string;
+  password?: string;
+  role?: StaffRole;
+  is_active?: boolean;
+}
+
 
 // ─── API Response ─────────────────────────────────────────────────────────────
 

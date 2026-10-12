@@ -9,4 +9,8 @@ export const ROUTES = {
   RECORDS: '/(tabs)/records',
   RECORD_DETAIL: (code: string) => `/records/${code}` as const,
   RECORD_RETURN: '/records/return',
+  STAFF: '/(tabs)/staff',
+  STAFF_ADD: '/staff/add',
+  STAFF_EDIT: (id: string) => `/staff/${id}` as const,
 } as const;
+
