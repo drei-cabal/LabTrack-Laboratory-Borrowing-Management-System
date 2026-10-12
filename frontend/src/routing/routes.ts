@@ -6,4 +6,7 @@ export const ROUTES = {
   EQUIPMENT_EDIT: (id: string) => `/equipment/edit/${id}` as const,
   BORROW: '/(tabs)/borrow',
   BORROW_NEW: '/borrow/new',
+  RECORDS: '/(tabs)/records',
+  RECORD_DETAIL: (code: string) => `/records/${code}` as const,
+  RECORD_RETURN: '/records/return',
 } as const;

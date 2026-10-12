@@ -22,7 +22,24 @@ export const borrowService = {
   },
 
   /** PUT /api/borrow/:id/return */
-  returnRecord(id: string) {
-    return api.put<BorrowRecordWithEquipment>(`/borrow/${id}/return`, {});
+  returnRecord(id: string, returnDate?: string, returnRemarks?: string) {
+    return api.put<BorrowRecordWithEquipment>(`/borrow/${id}/return`, {
+      return_date: returnDate,
+      return_remarks: returnRemarks,
+    });
+  },
+
+  /** GET /api/borrow/transactions */
+  getTransactions(status?: string, search?: string) {
+    const params = new URLSearchParams();
+    if (status && status !== 'all') params.append('status', status);
+    if (search && search.trim()) params.append('search', search.trim());
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return api.get<any[]>(`/borrow/transactions${qs}`);
+  },
+
+  /** POST /api/borrow/return */
+  processReturn(payload: any) {
+    return api.post<any>('/borrow/return', payload);
   },
 };

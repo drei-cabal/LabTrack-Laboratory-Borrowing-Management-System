@@ -94,9 +94,23 @@ export function Button({
     return list;
   };
 
+  const isLockedRef = React.useRef(false);
+
+  const handlePress = () => {
+    if (disabled || loading || isLockedRef.current) return;
+    isLockedRef.current = true;
+    try {
+      onPress();
+    } finally {
+      setTimeout(() => {
+        isLockedRef.current = false;
+      }, 500);
+    }
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled || loading}
       style={({ pressed }) => getContainerStyle(pressed)}
       accessibilityRole="button"

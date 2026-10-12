@@ -73,7 +73,11 @@ export default function NewBorrowTransactionScreen() {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
     } else {
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace(ROUTES.BORROW as any);
+      }
     }
   };
 
@@ -205,7 +209,7 @@ export default function NewBorrowTransactionScreen() {
 
   // ─── Step 4: Approve Transaction ───────────────────────────────────────────
 
-  const handleApproveTransaction = async () => {
+  const executeApproveTransaction = async () => {
     try {
       setSubmitting(true);
 
@@ -239,6 +243,23 @@ export default function NewBorrowTransactionScreen() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleApproveTransaction = () => {
+    if (submitting) return;
+
+    Alert.alert(
+      'Approve Borrow Transaction',
+      `Confirm checkout of ${selectedItems.size} equipment type(s) for ${borrowerName.trim()} (${daysNum} days)?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Approve',
+          style: 'default',
+          onPress: executeApproveTransaction,
+        },
+      ]
+    );
   };
 
   // ─── Step Title ─────────────────────────────────────────────────────────────

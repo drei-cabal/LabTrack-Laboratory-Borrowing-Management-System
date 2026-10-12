@@ -21,6 +21,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
 import { ROUTES } from '../../routing/routes';
 import { BorrowRecordWithEquipment } from '../../types';
+import { useGuardedPress } from '../../utils/guards';
 
 type FilterTab = 'all' | 'borrowed' | 'overdue' | 'returned';
 
@@ -30,9 +31,9 @@ export default function BorrowScreen() {
   const { records, loading, refresh, returnItem } = useBorrowRecords(filter);
   const [returningId, setReturningId] = useState<string | null>(null);
 
-  const handleNewTransaction = () => {
+  const handleNewTransaction = useGuardedPress(() => {
     router.push(ROUTES.BORROW_NEW as any);
-  };
+  }, 500);
 
   const handleReturnPress = (item: BorrowRecordWithEquipment) => {
     Alert.alert(

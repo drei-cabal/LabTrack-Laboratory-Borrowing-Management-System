@@ -34,6 +34,8 @@ export interface BorrowRecordEntity {
   authorized_by?: string;
   photo_proof?: string;
   quantity: number;
+  transaction_code?: string;
+  return_remarks?: string;
   created_at?: string;
 }
 
@@ -60,4 +62,29 @@ export interface CreateBorrowTransactionPayload {
   authorized_by?: string;
   photo_proof?: string;
   notes?: string;
+}
+
+export interface TransactionSummary {
+  transaction_code: string;
+  borrower_name: string;
+  borrower_id: string;
+  purpose?: string;
+  borrow_date: string;
+  due_date: string;
+  return_date?: string | null;
+  status: BorrowStatus;
+  authorized_by?: string;
+  notes?: string;
+  return_remarks?: string;
+  photo_proof?: string;
+  items_summary: string;
+  total_items: number;
+  items: BorrowRecordWithEquipment[];
+}
+
+export interface ReturnTransactionPayload {
+  transaction_code?: string;
+  record_ids?: string[];
+  return_date?: string;
+  return_remarks?: string;
 }
