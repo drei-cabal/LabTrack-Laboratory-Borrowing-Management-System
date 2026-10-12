@@ -29,10 +29,40 @@ export interface BorrowRecordEntity {
   equipment_id: string;
   borrower_name: string;
   borrower_id: string;
+  purpose?: string;
   borrow_date: string;
   due_date: string;
   return_date?: string;
   status: BorrowStatus;
+  notes?: string;
+  authorized_by?: string;
+  photo_proof?: string;
+  quantity: number;
+  created_at?: string;
+}
+
+export interface BorrowRecordWithEquipment extends BorrowRecordEntity {
+  equipment_name: string;
+  equipment_brand?: string;
+  equipment_model?: string;
+  equipment_product_id?: string;
+}
+
+export interface BorrowItemInput {
+  equipment_id: string;
+  quantity: number;
+}
+
+export interface CreateBorrowTransactionPayload {
+  borrower_name: string;
+  borrower_id: string;
+  purpose: string;
+  items: BorrowItemInput[];
+  loan_period_days: number;
+  borrow_date?: string;
+  due_date?: string;
+  authorized_by?: string;
+  photo_proof?: string;
   notes?: string;
 }
 

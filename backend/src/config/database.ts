@@ -129,14 +129,37 @@ const SCHEMA = `
     equipment_id TEXT NOT NULL,
     borrower_name TEXT NOT NULL,
     borrower_id TEXT NOT NULL,
+    purpose TEXT,
     borrow_date TEXT NOT NULL,
     due_date TEXT NOT NULL,
     return_date TEXT,
     status TEXT NOT NULL DEFAULT 'borrowed',
     notes TEXT,
+    authorized_by TEXT,
+    photo_proof TEXT,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT,
     FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE CASCADE
   );
 `;
+
+function migrateSchema(db: SqlJsDatabase): void {
+  const columnsToAdd = [
+    'ALTER TABLE borrow_records ADD COLUMN purpose TEXT',
+    'ALTER TABLE borrow_records ADD COLUMN authorized_by TEXT',
+    'ALTER TABLE borrow_records ADD COLUMN photo_proof TEXT',
+    'ALTER TABLE borrow_records ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1',
+    'ALTER TABLE borrow_records ADD COLUMN created_at TEXT',
+  ];
+
+  for (const sql of columnsToAdd) {
+    try {
+      db.exec(sql);
+    } catch {
+      // Column already exists, safe to ignore
+    }
+  }
+}
 
 // ─── Seed ─────────────────────────────────────────────────────────────────────
 
@@ -230,6 +253,9 @@ export async function initDatabase(): Promise<void> {
 
   // Run schema (no-op if tables already exist)
   _db.exec(SCHEMA);
+
+  // Apply column migrations if database already existed
+  migrateSchema(_db);
 
   // Seed if fresh
   seedIfEmpty(_db);
