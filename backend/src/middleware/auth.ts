@@ -65,3 +65,20 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     res.status(401).json(body);
   }
 }
+
+/**
+ * Ensures the authenticated user has the 'admin' role.
+ * Must be preceded by `authenticate`.
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user || req.user.role !== 'admin') {
+    const body: ApiResponse<never> = {
+      success: false,
+      error: 'Admin access required.',
+      statusCode: 403,
+    };
+    res.status(403).json(body);
+    return;
+  }
+  next();
+}

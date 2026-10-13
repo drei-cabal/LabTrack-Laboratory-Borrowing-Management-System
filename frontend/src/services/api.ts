@@ -38,8 +38,16 @@ export async function apiRequest<T = unknown>(
     const json = await response.json();
     return json as ApiResponse<T>;
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : 'Network error. Is the server running?';
+    const rawMessage = error instanceof Error ? error.message : String(error);
+    const isNetworkError =
+      rawMessage === 'Failed to fetch' ||
+      rawMessage.includes('Network request failed') ||
+      rawMessage.includes('ECONNREFUSED');
+
+    const message = isNetworkError
+      ? 'Cannot connect to backend server. Please make sure the backend is running on port 3001.'
+      : rawMessage;
+
     return {
       success: false,
       error: message,

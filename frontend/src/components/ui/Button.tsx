@@ -13,7 +13,7 @@ import { AppColors } from '../../constants/colors';
 export interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger-outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger-outline' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   disabled?: boolean;
@@ -55,6 +55,10 @@ export function Button({
         list.push(styles.outline);
         if (pressed) list.push(styles.pressedOutline);
         break;
+      case 'danger':
+        list.push(styles.danger);
+        if (pressed) list.push(styles.pressedDanger);
+        break;
       case 'danger-outline':
         list.push(styles.dangerOutline);
         if (pressed) list.push(styles.pressedDangerOutline);
@@ -83,10 +87,14 @@ export function Button({
       case 'outline':
         list.push(styles.outlineText);
         break;
+      case 'danger':
+        list.push(styles.dangerText);
+        break;
       case 'danger-outline':
         list.push(styles.dangerOutlineText);
         break;
     }
+
 
     if (disabled) list.push(styles.disabledText);
     if (textStyle) list.push(textStyle);
@@ -94,9 +102,23 @@ export function Button({
     return list;
   };
 
+  const isLockedRef = React.useRef(false);
+
+  const handlePress = () => {
+    if (disabled || loading || isLockedRef.current) return;
+    isLockedRef.current = true;
+    try {
+      onPress();
+    } finally {
+      setTimeout(() => {
+        isLockedRef.current = false;
+      }, 500);
+    }
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled || loading}
       style={({ pressed }) => getContainerStyle(pressed)}
       accessibilityRole="button"
@@ -160,6 +182,12 @@ const styles = StyleSheet.create({
   pressedOutline: {
     backgroundColor: '#F1F5F9',
   },
+  danger: {
+    backgroundColor: '#DC2626',
+  },
+  pressedDanger: {
+    opacity: 0.85,
+  },
   dangerOutline: {
     backgroundColor: 'transparent',
     borderWidth: 1.25,
@@ -190,10 +218,14 @@ const styles = StyleSheet.create({
   outlineText: {
     color: AppColors.navy,
   },
+  dangerText: {
+    color: AppColors.white,
+  },
   dangerOutlineText: {
     color: '#DC2626',
   },
   disabledText: {
     color: AppColors.textMuted,
   },
+
 });
