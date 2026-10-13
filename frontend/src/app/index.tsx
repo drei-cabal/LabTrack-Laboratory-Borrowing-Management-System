@@ -158,6 +158,67 @@ export default function LoginScreen() {
             <Text style={styles.helpText}>Forgot your login? Contact your Lab Admin.</Text>
           </View>
 
+          {/* TEMP DEV NAV START */}
+          {(() => {
+            const SHOW_DEV_NAV = true;
+
+            if (!SHOW_DEV_NAV) return null;
+
+            const devPages = [
+              { label: 'Home / Dashboard', route: '/(tabs)' },
+              { label: 'Equipment', route: ROUTES.EQUIPMENT },
+              { label: 'Borrowing', route: '/(tabs)/borrow' },
+              { label: 'Records', route: '/(tabs)/records' },
+              { label: 'Staff', route: '/(tabs)/staff' },
+            ];
+
+            return (
+              <View
+                style={{
+                  width: '100%',
+                  marginTop: 24,
+                  padding: 14,
+                  borderWidth: 1,
+                  borderColor: '#F59E0B',
+                  borderRadius: 8,
+                  backgroundColor: '#FFFBEB',
+                }}
+              >
+                <Text
+                  style={{
+                    marginBottom: 10,
+                    color: '#92400E',
+                    fontSize: 12,
+                    fontWeight: '700',
+                  }}
+                >
+                  DEV ONLY: Temporary Navigation
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {devPages.map((page) => (
+                    <Pressable
+                      key={page.label}
+                      accessibilityRole="button"
+                      onPress={() => router.push(page.route as any)}
+                      style={({ pressed }) => ({
+                        paddingHorizontal: 10,
+                        paddingVertical: 8,
+                        borderRadius: 6,
+                        backgroundColor: navy,
+                        opacity: pressed ? 0.8 : 1,
+                      })}
+                    >
+                      <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '600' }}>
+                        {page.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            );
+          })()}
+          {/* TEMP DEV NAV END */}
+
           {/* Offline version label */}
           <View style={styles.footer}>
             <Text style={styles.versionText}>v1.0.0 · Offline</Text>
