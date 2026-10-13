@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import '../global.css';
+
 const navy = '#0a244d';
 
 function LabMark() {
@@ -64,7 +66,7 @@ export default function HomeScreen() {
 
           <View style={styles.form}>
             <Text style={styles.label}>Username</Text>
-            <View style={styles.input}>
+            <View id="labtrack-login-username" style={styles.input}>
               <TextInput
                 accessibilityLabel="Username"
                 autoCapitalize="none"
@@ -82,7 +84,7 @@ export default function HomeScreen() {
             </View>
 
             <Text style={[styles.label, styles.passwordLabel]}>Password</Text>
-            <View style={styles.input}>
+            <View id="labtrack-login-password" style={styles.input}>
               <TextInput
                 accessibilityLabel="Password"
                 autoCapitalize="none"

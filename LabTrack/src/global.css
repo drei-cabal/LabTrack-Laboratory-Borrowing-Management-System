@@ -7,3 +7,13 @@
   --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
   --font-serif: Georgia, 'Times New Roman', serif;
 }
+
+#labtrack-login-username input:focus,
+#labtrack-login-password input:focus {
+  outline: none;
+}
+
+#labtrack-login-username:focus-within,
+#labtrack-login-password:focus-within {
+  box-shadow: 0 0 0 2px #0a244d;
+}
