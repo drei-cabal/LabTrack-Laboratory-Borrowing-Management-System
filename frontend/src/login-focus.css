@@ -1,0 +1,9 @@
+#labtrack-login-username input:focus,
+#labtrack-login-password input:focus {
+  outline: none;
+}
+
+#labtrack-login-username:focus-within,
+#labtrack-login-password:focus-within {
+  box-shadow: 0 0 0 2px #0a234a;
+}

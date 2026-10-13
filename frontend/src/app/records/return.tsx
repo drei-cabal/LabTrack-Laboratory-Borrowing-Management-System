@@ -40,12 +40,7 @@ export default function ReturnItemScreen() {
   const [dateTimeReturned, setDateTimeReturned] = useState('');
   const [remarks, setRemarks] = useState('All units returned in good working condition.');
 
-  useEffect(() => {
-    setDateTimeReturned(formatDateTimeDisplay());
-    fetchActiveTransactions();
-  }, []);
-
-  const fetchActiveTransactions = async () => {
+  async function fetchActiveTransactions() {
     try {
       setLoading(true);
       const res = await recordService.getTransactions('all');
@@ -69,7 +64,7 @@ export default function ReturnItemScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleSelectTransaction = (tx: TransactionSummary) => {
     setSelectedTxCode(tx.transaction_code);
@@ -79,6 +74,11 @@ export default function ReturnItemScreen() {
     );
     setSelectedItemIds(activeIds);
   };
+
+  useEffect(() => {
+    setDateTimeReturned(formatDateTimeDisplay());
+    fetchActiveTransactions();
+  }, []);
 
   const toggleItemCheckbox = (itemId: string) => {
     setSelectedItemIds((prev) => {
