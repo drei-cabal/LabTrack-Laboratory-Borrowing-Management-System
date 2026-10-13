@@ -117,3 +117,38 @@ export interface UpdateStaffPayload {
   is_active?: boolean;
 }
 
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+export interface DashboardStats {
+  total_equipment: number;
+  total_borrowed: number;
+  total_overdue: number;
+}
+
+export interface DashboardOverdueItem {
+  id: string;
+  transaction_code: string;
+  title: string;
+  borrower_name: string;
+  due_date: string;
+  days_late: number;
+  days_late_label: string;
+}
+
+export interface DashboardRecentTransaction {
+  id: string;
+  transaction_code: string;
+  title: string;
+  borrower_name: string;
+  status: BorrowStatus;
+  borrow_date: string;
+  due_date: string;
+}
+
+export interface DashboardData {
+  stats: DashboardStats;
+  overdue_items: DashboardOverdueItem[];
+  recent_transactions: DashboardRecentTransaction[];
+}
+
+

@@ -5,10 +5,22 @@ import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppColors } from '../../constants/colors';
 
+import { tokenStore } from '../../services/tokenStore';
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const isIos = Platform.OS === 'ios';
   const bottomInset = insets.bottom;
+
+  const [isAdmin, setIsAdmin] = React.useState(true);
+
+  React.useEffect(() => {
+    tokenStore.getUser().then((user) => {
+      if (user) {
+        setIsAdmin(user.role === 'admin');
+      }
+    });
+  }, []);
 
   // On iOS use bottom safe area; on Web/Android use a comfortable fixed height
   const tabHeight = isIos ? 60 + bottomInset : 70;
@@ -16,8 +28,9 @@ export default function TabLayout() {
 
   return (
     <Tabs
-      initialRouteName="equipment"
+      initialRouteName="index"
       screenOptions={{
+
         headerShown: false,
         tabBarActiveTintColor: AppColors.navy,
         tabBarInactiveTintColor: '#94A3B8',
@@ -96,6 +109,7 @@ export default function TabLayout() {
         name="staff"
         options={{
           title: 'Staff',
+          href: isAdmin ? '/staff' : null,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
@@ -105,6 +119,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
     </Tabs>
   );
 }
