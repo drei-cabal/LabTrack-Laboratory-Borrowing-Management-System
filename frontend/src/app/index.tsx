@@ -58,10 +58,11 @@ export default function LoginScreen() {
         return;
       }
 
-      router.replace(ROUTES.EQUIPMENT as any);
+      router.replace(ROUTES.HOME as any);
     } finally {
       setLoggingIn(false);
     }
+
   };
 
   return (

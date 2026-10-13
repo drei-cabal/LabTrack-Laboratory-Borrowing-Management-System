@@ -19,6 +19,7 @@ import { EquipmentCard } from '../../components/equipment/EquipmentCard';
 import { FilterChips } from '../../components/ui/FilterChips';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ROUTES } from '../../routing/routes';
+import { authService } from '../../services/authService';
 
 export default function EquipmentScreen() {
   const router = useRouter();
@@ -46,10 +47,14 @@ export default function EquipmentScreen() {
       {
         text: 'Log Out',
         style: 'destructive',
-        onPress: () => router.replace(ROUTES.LOGIN as any),
+        onPress: async () => {
+          await authService.logout();
+          router.replace(ROUTES.LOGIN as any);
+        },
       },
     ]);
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
