@@ -18,6 +18,7 @@ import { AppColors } from '../../constants/colors';
 import { EquipmentCard } from '../../components/equipment/EquipmentCard';
 import { FilterChips } from '../../components/ui/FilterChips';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { Fab } from '../../components/ui/Fab';
 import { ROUTES } from '../../routing/routes';
 import { authService } from '../../services/authService';
 
@@ -129,16 +130,11 @@ export default function EquipmentScreen() {
           />
         )}
 
-        {/* Floating Action Button (FAB) */}
-        <Pressable
+        <Fab
+          icon="add"
+          label="Add Equipment"
           onPress={handleAddEquipment}
-          style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
-          accessibilityRole="button"
-          accessibilityLabel="Add Equipment"
-        >
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.fabText}>Add Equipment</Text>
-        </Pressable>
+        />
       </View>
     </SafeAreaView>
   );
@@ -215,32 +211,5 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 90,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    backgroundColor: AppColors.navy,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-    gap: 6,
-  },
-  fabPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
   },
 });

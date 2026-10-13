@@ -6,7 +6,6 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
-  Pressable,
   ActivityIndicator,
   RefreshControl,
   Keyboard,
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { AppColors } from '../../constants/colors';
+import { Fab } from '../../components/ui/Fab';
 import { useRecords } from '../../hooks/useRecords';
 import { ROUTES } from '../../routing/routes';
 import { formatDateDisplay } from '../../utils/date';
@@ -222,14 +222,11 @@ export default function RecordsScreen() {
         />
       )}
 
-      {/* Floating Action Button for Return Item */}
-      <Pressable
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+      <Fab
+        icon="arrow-undo-outline"
+        label="Return Item"
         onPress={handleReturnPress}
-      >
-        <Ionicons name="arrow-undo-outline" size={18} color="#FFFFFF" />
-        <Text style={styles.fabText}>Return Item</Text>
-      </Pressable>
+      />
     </SafeAreaView>
   );
 }
@@ -424,32 +421,5 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    backgroundColor: '#0F172A',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 6,
-    gap: 6,
-  },
-  fabPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
   },
 });
