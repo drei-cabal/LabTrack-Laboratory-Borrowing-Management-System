@@ -22,9 +22,8 @@ export default function TabLayout() {
     });
   }, []);
 
-  // On iOS use bottom safe area; on Web/Android use a comfortable fixed height
-  const tabHeight = isIos ? 60 + bottomInset : 70;
-  const tabPaddingBottom = isIos ? Math.max(bottomInset, 16) : 12;
+  const tabMinHeight = (isIos ? 60 : 70) + bottomInset;
+  const tabPaddingBottom = Math.max(bottomInset, isIos ? 16 : 12);
 
   return (
     <Tabs
@@ -32,23 +31,30 @@ export default function TabLayout() {
       screenOptions={{
 
         headerShown: false,
+        tabBarLabelPosition: 'below-icon',
         tabBarActiveTintColor: AppColors.navy,
         tabBarInactiveTintColor: '#94A3B8',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E2E8F0',
-          height: tabHeight,
+          height: 'auto',
+          minHeight: tabMinHeight,
+          flexShrink: 0,
           paddingBottom: tabPaddingBottom,
           paddingTop: 8,
         },
         tabBarItemStyle: {
+          minHeight: 56,
           justifyContent: 'center',
           alignItems: 'center',
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
+          lineHeight: 16,
+          maxWidth: '100%',
+          flexShrink: 0,
           marginTop: 2,
         },
       }}
