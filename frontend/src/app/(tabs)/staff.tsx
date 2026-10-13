@@ -16,10 +16,14 @@ import { useStaff } from '../../hooks/useStaff';
 import { AppColors } from '../../constants/colors';
 import { ROUTES } from '../../routing/routes';
 import { getInitials, formatUsername } from '../../utils/staffUtils';
-import { useGuardedPress } from '../../utils/guards';
 import { StaffEntity } from '../../types';
+import { useGuardedPress } from '../../utils/guards';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { RoleBadge } from '../../components/ui/RoleBadge';
 
 export default function StaffScreen() {
+
+
   const router = useRouter();
   const { staff, loading, refreshing, refresh, error } = useStaff();
 
@@ -64,24 +68,11 @@ export default function StaffScreen() {
 
         {/* Right Badges */}
         <View style={styles.badgeRow}>
-          {isInactive && (
-            <View style={styles.inactivePill}>
-              <View style={styles.inactiveDot} />
-              <Text style={styles.inactiveText}>Inactive</Text>
-            </View>
-          )}
-
-          {isAdmin ? (
-            <View style={styles.adminBadge}>
-              <Text style={styles.adminBadgeText}>ADMIN</Text>
-            </View>
-          ) : (
-            <View style={styles.assistantBadge}>
-              <Text style={styles.assistantBadgeText}>ASST.</Text>
-            </View>
-          )}
+          {isInactive && <StatusBadge status="inactive" />}
+          <RoleBadge role={item.role} />
         </View>
       </Pressable>
+
     );
   };
 

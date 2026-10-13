@@ -17,6 +17,8 @@ import { AppColors } from '../../constants/colors';
 import { ROUTES } from '../../routing/routes';
 import { useGuardedPress } from '../../utils/guards';
 import { DashboardOverdueItem, DashboardRecentTransaction } from '../../types';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+
 
 function formatWelcomeName(name?: string, username?: string): string {
   if (!name && !username) return 'Team Member';
@@ -275,15 +277,11 @@ export default function HomeScreen() {
 
                     {/* Status Pill & Date */}
                     <View style={styles.itemRight}>
-                      <View style={[styles.statusPill, { backgroundColor: statusBg }]}>
-                        <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-                        <Text style={[styles.statusText, { color: statusColor }]}>
-                          {statusLabel}
-                        </Text>
-                      </View>
+                      <StatusBadge status={tx.status} />
                       <Text style={styles.dateText}>{tx.borrow_date}</Text>
                     </View>
                   </Pressable>
+
                 );
               })
             )}
