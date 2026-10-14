@@ -28,9 +28,9 @@ export function useBorrowRecords(statusFilter: 'all' | 'borrowed' | 'overdue' | 
     fetchRecords();
   }, [fetchRecords]);
 
-  const returnItem = async (id: string): Promise<boolean> => {
+  const returnItem = async (id: string, returnRemarks?: string): Promise<boolean> => {
     try {
-      const res = await borrowService.returnRecord(id);
+      const res = await borrowService.returnRecord(id, undefined, returnRemarks);
       if (res.success) {
         await fetchRecords();
         return true;
