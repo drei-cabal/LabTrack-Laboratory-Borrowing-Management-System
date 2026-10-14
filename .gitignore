@@ -1,1 +1,46 @@
-.github/copilot-instructions.md
+# ─── Dependencies ───────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Expo / React Native ────────────────────────────────────────────────────────
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# ─── Native build outputs ────────────────────────────────────────────────────────
+/ios
+/android
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# ─── Metro ───────────────────────────────────────────────────────────────────────
+.metro-health-check*
+
+# ─── Backend build ───────────────────────────────────────────────────────────────
+backend/dist/
+backend/*.db
+backend/*.sqlite
+
+# ─── Environment files ───────────────────────────────────────────────────────────
+.env
+.env.local
+.env*.local
+
+# ─── Debug / logs ────────────────────────────────────────────────────────────────
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# ─── TypeScript ──────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── OS / Editor ─────────────────────────────────────────────────────────────────
+.DS_Store
+*.pem
+.vscode/settings.json
