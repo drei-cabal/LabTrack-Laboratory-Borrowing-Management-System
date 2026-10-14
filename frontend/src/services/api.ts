@@ -29,7 +29,7 @@ export async function apiRequest<T = unknown>(
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = 'Bearer ' + token;
     }
 
     const controller = new AbortController();

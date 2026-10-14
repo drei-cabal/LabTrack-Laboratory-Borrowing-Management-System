@@ -1,6 +1,7 @@
 export type EquipmentStatus = 'Available' | 'Partial' | 'Out';
 
 export type BorrowStatus = 'borrowed' | 'overdue' | 'returned';
+export type TransactionStatusFilter = BorrowStatus | 'all' | 'active';
 
 export interface EquipmentEntity {
   id: string;
@@ -150,5 +151,4 @@ export interface DashboardData {
   overdue_items: DashboardOverdueItem[];
   recent_transactions: DashboardRecentTransaction[];
 }
-
 
