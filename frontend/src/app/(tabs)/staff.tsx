@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   ActivityIndicator,
+  TextInput,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,14 +19,10 @@ import { ROUTES } from '../../routing/routes';
 import { getInitials, formatUsername } from '../../utils/staffUtils';
 import { StaffEntity } from '../../types';
 import { useGuardedPress } from '../../utils/guards';
-import { StatusBadge } from '../../components/ui/StatusBadge';
-import { RoleBadge } from '../../components/ui/RoleBadge';
-import { Fab } from '../../components/ui/Fab';
 
 export default function StaffScreen() {
-
-
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
   const { staff, loading, refreshing, refresh, error } = useStaff();
 
   const handleAddPress = useGuardedPress(() => {
@@ -35,6 +32,18 @@ export default function StaffScreen() {
   const handleEditPress = useGuardedPress((id: string) => {
     router.push(ROUTES.STAFF_EDIT(id) as any);
   });
+
+  const filteredStaff = useMemo(() => {
+    if (!searchQuery.trim()) return staff;
+    const q = searchQuery.trim().toLowerCase();
+    return staff.filter((item) => {
+      const matchName = item.full_name.toLowerCase().includes(q);
+      const matchUsername = item.username.toLowerCase().includes(q);
+      const matchEmail = (item.email || '').toLowerCase().includes(q);
+      const matchRole = item.role.toLowerCase().includes(q);
+      return matchName || matchUsername || matchEmail || matchRole;
+    });
+  }, [staff, searchQuery]);
 
   const renderStaffItem = ({ item }: { item: StaffEntity }) => {
     const initials = getInitials(item.full_name);
@@ -52,28 +61,56 @@ export default function StaffScreen() {
         accessibilityRole="button"
         accessibilityLabel={`Edit ${item.full_name}`}
       >
-        {/* Left Initials Avatar */}
+        {/* Left Initials Avatar (Square) */}
         <View style={[styles.avatar, isInactive && styles.avatarInactive]}>
           <Text style={styles.avatarText}>{initials}</Text>
         </View>
 
         {/* Center Details */}
         <View style={styles.staffDetails}>
-          <Text style={[styles.staffName, isInactive && styles.staffNameInactive]} numberOfLines={1}>
-            {item.full_name}
-          </Text>
+          <View style={styles.nameHeaderRow}>
+            <Text style={[styles.staffName, isInactive && styles.staffNameInactive]} numberOfLines={1}>
+              {item.full_name}
+            </Text>
+            {/* Square Role & Status Badges */}
+            <View style={styles.badgeRow}>
+              <View style={[styles.squareBadge, isAdmin ? styles.adminBadge : styles.asstBadge]}>
+                <Text style={[styles.squareBadgeText, isAdmin ? styles.adminBadgeText : styles.asstBadgeText]}>
+                  {isAdmin ? 'ADMIN' : 'STAFF'}
+                </Text>
+              </View>
+
+              {isInactive ? (
+                <View style={[styles.squareBadge, styles.inactiveBadge]}>
+                  <Text style={styles.inactiveBadgeText}>INACTIVE</Text>
+                </View>
+              ) : (
+                <View style={[styles.squareBadge, styles.activeBadge]}>
+                  <Text style={styles.activeBadgeText}>ACTIVE</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Username */}
           <Text style={styles.staffUsername} numberOfLines={1}>
             {formatUsername(item.username)}
           </Text>
+
+          {/* Email */}
+          <View style={styles.emailRow}>
+            <Ionicons name="mail-outline" size={13} color="#64748B" />
+            <Text style={styles.staffEmail} numberOfLines={1}>
+              {item.email || `${item.username.toLowerCase()}@university.edu`}
+            </Text>
+          </View>
         </View>
 
-        {/* Right Badges */}
-        <View style={styles.badgeRow}>
-          {isInactive && <StatusBadge status="inactive" />}
-          <RoleBadge role={item.role} />
+        {/* Right Action (Square Button) */}
+        <View style={styles.editBtnSquare}>
+          <Ionicons name="chevron-forward" size={16} color="#64748B" />
         </View>
       </Pressable>
-
     );
   };
 
@@ -82,20 +119,27 @@ export default function StaffScreen() {
 
     return (
       <View style={styles.emptyContainer}>
-        <View style={styles.emptyIconCircle}>
+        <View style={styles.emptyIconSquare}>
           <Ionicons name="person-outline" size={32} color="#94A3B8" />
         </View>
-        <Text style={styles.emptyTitle}>No staff accounts yet.</Text>
-        <Text style={styles.emptySubtitle}>
-          Add the first team member to grant lab access.
+        <Text style={styles.emptyTitle}>
+          {searchQuery ? 'No matching staff found.' : 'No staff accounts yet.'}
         </Text>
-        <Pressable
-          onPress={handleAddPress}
-          style={({ pressed }) => [styles.emptyAddBtn, pressed && styles.emptyAddBtnPressed]}
-          accessibilityRole="button"
-        >
-          <Text style={styles.emptyAddBtnText}>Add Staff</Text>
-        </Pressable>
+        <Text style={styles.emptySubtitle}>
+          {searchQuery
+            ? 'Try searching with a different name, username, or email.'
+            : 'Add team members to grant laboratory access and borrowing management.'}
+        </Text>
+        {!searchQuery && (
+          <Pressable
+            onPress={handleAddPress}
+            style={({ pressed }) => [styles.emptyAddBtn, pressed && styles.emptyAddBtnPressed]}
+            accessibilityRole="button"
+          >
+            <Ionicons name="add" size={18} color="#FFFFFF" />
+            <Text style={styles.emptyAddBtnText}>Add Staff Member</Text>
+          </Pressable>
+        )}
       </View>
     );
   };
@@ -104,22 +148,58 @@ export default function StaffScreen() {
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* Top Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Manage Staff</Text>
+        <View>
+          <Text style={styles.headerTitle}>Manage Staff</Text>
+          <Text style={styles.headerSubtitle}>
+            {staff.length} registered laboratory personnel
+          </Text>
+        </View>
+
+        {/* Square Add Staff Header Button */}
+        <Pressable
+          onPress={handleAddPress}
+          style={({ pressed }) => [styles.headerAddBtn, pressed && styles.btnPressed]}
+          accessibilityRole="button"
+          accessibilityLabel="Add Staff"
+        >
+          <Ionicons name="add" size={18} color="#FFFFFF" />
+          <Text style={styles.headerAddText}>Add Staff</Text>
+        </Pressable>
+      </View>
+
+      {/* Search Bar (Square) */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by name, email, or username..."
+          placeholderTextColor="#94A3B8"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          clearButtonMode="while-editing"
+          autoCapitalize="none"
+        />
+        {searchQuery.length > 0 && (
+          <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+          </Pressable>
+        )}
       </View>
 
       {/* Main Content */}
       {loading && staff.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={AppColors.navy} />
+          <Text style={styles.loadingText}>Loading staff directory...</Text>
         </View>
       ) : (
         <FlatList
-          data={staff}
+          data={filteredStaff}
           keyExtractor={(item) => item.id}
           renderItem={renderStaffItem}
           contentContainerStyle={[
             styles.listContent,
-            staff.length === 0 && styles.listContentEmpty,
+            filteredStaff.length === 0 && styles.listContentEmpty,
           ]}
           ListEmptyComponent={renderEmptyState}
           refreshControl={
@@ -133,12 +213,6 @@ export default function StaffScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      <Fab
-        icon="add"
-        label="Add Staff"
-        onPress={handleAddPress}
-      />
     </SafeAreaView>
   );
 }
@@ -146,30 +220,79 @@ export default function StaffScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#E2E8F0',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: AppColors.navy,
+    color: '#0F172A',
     letterSpacing: -0.3,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  headerAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#0F172A',
+    borderRadius: 4, // Square design
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  btnPressed: {
+    opacity: 0.85,
+  },
+  headerAddText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4, // Square design
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    height: 42,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#0F172A',
   },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: '#64748B',
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 90, // Leave room for FAB and tab bar
+    paddingTop: 8,
+    paddingBottom: 40,
   },
   listContentEmpty: {
     flexGrow: 1,
@@ -179,44 +302,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 4, // Square design
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   staffCardPressed: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#F1F5F9',
     borderColor: '#CBD5E1',
   },
   staffCardInactive: {
     backgroundColor: '#FAFAFA',
     borderColor: '#E2E8F0',
-    opacity: 0.9,
+    opacity: 0.85,
   },
   avatar: {
     width: 44,
     height: 44,
-    borderRadius: 8,
-    backgroundColor: AppColors.navy,
+    borderRadius: 4, // Square design
+    backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 12,
   },
   avatarInactive: {
-    backgroundColor: '#475569',
+    backgroundColor: '#64748B',
   },
   avatarText: {
     color: '#FFFFFF',
@@ -227,71 +344,96 @@ const styles = StyleSheet.create({
   staffDetails: {
     flex: 1,
     justifyContent: 'center',
-    marginRight: 8,
+    gap: 3,
+  },
+  nameHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    flexWrap: 'wrap',
   },
   staffName: {
     fontSize: 15,
     fontWeight: '700',
-    color: AppColors.navy,
-    marginBottom: 3,
+    color: '#0F172A',
+    flexShrink: 1,
   },
   staffNameInactive: {
-    color: '#475569',
+    color: '#64748B',
   },
   staffUsername: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#64748B',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 2,
+  },
+  staffEmail: {
+    fontSize: 12,
+    color: '#475569',
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  inactivePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
     gap: 4,
   },
-  inactiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#94A3B8',
+  squareBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4, // Square design
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  inactiveText: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '600',
+  squareBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.4,
   },
   adminBadge: {
-    backgroundColor: AppColors.navy,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    backgroundColor: '#0F172A',
   },
   adminBadgeText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
   },
-  assistantBadge: {
-    backgroundColor: '#F8FAFC',
+  asstBadge: {
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: '#CBD5E1',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
   },
-  assistantBadgeText: {
-    color: '#64748B',
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+  asstBadgeText: {
+    color: '#475569',
+  },
+  activeBadge: {
+    backgroundColor: '#DCFCE7',
+  },
+  activeBadgeText: {
+    color: '#16A34A',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  inactiveBadge: {
+    backgroundColor: '#FEE2E2',
+  },
+  inactiveBadgeText: {
+    color: '#DC2626',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  editBtnSquare: {
+    width: 32,
+    height: 32,
+    borderRadius: 4, // Square design
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    backgroundColor: '#F8FAFC',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -299,44 +441,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     paddingVertical: 48,
   },
-  emptyIconCircle: {
+  emptyIconSquare: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: 4, // Square design
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: AppColors.navy,
+    color: '#0F172A',
     marginBottom: 6,
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
     marginBottom: 20,
   },
   emptyAddBtn: {
-    borderWidth: 1.5,
-    borderColor: AppColors.navy,
-    borderRadius: 8,
-    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0F172A',
+    borderRadius: 4, // Square design
+    paddingVertical: 12,
     paddingHorizontal: 20,
   },
   emptyAddBtnPressed: {
-    backgroundColor: '#F1F5F9',
+    opacity: 0.85,
   },
   emptyAddBtnText: {
-    color: AppColors.navy,
+    color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

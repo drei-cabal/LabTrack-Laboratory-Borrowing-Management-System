@@ -47,7 +47,7 @@ export async function getById(req: Request, res: Response): Promise<void> {
  */
 export async function create(req: Request, res: Response): Promise<void> {
   try {
-    const { full_name, username, password, role } = req.body as CreateStaffPayload;
+    const { full_name, username, email, password, role } = req.body as CreateStaffPayload;
 
     const errors: string[] = [];
     if (!full_name || full_name.trim().length < 2) {
@@ -55,6 +55,9 @@ export async function create(req: Request, res: Response): Promise<void> {
     }
     if (!username || username.trim().length < 3) {
       errors.push('Username is required (minimum 3 characters).');
+    }
+    if (email && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errors.push('Please enter a valid email address.');
     }
     if (!password || password.length < 6) {
       errors.push('Password must be at least 6 characters.');
@@ -87,6 +90,7 @@ export async function create(req: Request, res: Response): Promise<void> {
     const newStaff = staffRepository.create({
       full_name: full_name.trim(),
       username: cleanUsername,
+      email: email ? email.trim().toLowerCase() : undefined,
       password,
       role: role ?? 'assistant',
     });
@@ -115,7 +119,16 @@ export async function update(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const { full_name, username, password, role, is_active } = req.body as UpdateStaffPayload;
+    const { full_name, username, email, password, role, is_active } = req.body as UpdateStaffPayload;
+
+    if (email && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      res.status(400).json({
+        success: false,
+        error: 'Please enter a valid email address.',
+        statusCode: 400,
+      });
+      return;
+    }
 
     if (username) {
       const cleanUsername = username.replace(/^@/, '').trim().toLowerCase();
@@ -150,6 +163,7 @@ export async function update(req: Request, res: Response): Promise<void> {
     const updated = staffRepository.update(id, {
       full_name,
       username,
+      email: email !== undefined ? (email ? email.trim().toLowerCase() : '') : undefined,
       password,
       role,
       is_active,

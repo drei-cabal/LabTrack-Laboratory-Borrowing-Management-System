@@ -110,6 +110,7 @@ const SCHEMA = `
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'assistant',
     full_name TEXT,
+    email TEXT,
     is_active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL
   );
@@ -150,6 +151,7 @@ const SCHEMA = `
 function migrateSchema(db: SqlJsDatabase): void {
   const columnsToAdd = [
     'ALTER TABLE users ADD COLUMN full_name TEXT',
+    'ALTER TABLE users ADD COLUMN email TEXT',
     'ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1',
     'ALTER TABLE borrow_records ADD COLUMN transaction_code TEXT',
     'ALTER TABLE borrow_records ADD COLUMN purpose TEXT',
@@ -168,14 +170,15 @@ function migrateSchema(db: SqlJsDatabase): void {
     }
   }
 
-  // Backfill full_name on users if null
+  // Backfill full_name and email on users if null
   try {
     db.exec(`
-      UPDATE users SET full_name = 'Prof. Eduardo Cruz' WHERE username = 'admin.cruz' AND (full_name IS NULL OR full_name = '');
-      UPDATE users SET full_name = 'Karen Dela Cruz' WHERE username = 'k.delacruz' AND (full_name IS NULL OR full_name = '');
-      UPDATE users SET full_name = 'Marco Villanueva' WHERE username = 'm.villanueva' AND (full_name IS NULL OR full_name = '');
-      UPDATE users SET full_name = 'Rina Pascual' WHERE username = 'r.pascual' AND (full_name IS NULL OR full_name = '');
+      UPDATE users SET full_name = 'Prof. Eduardo Cruz', email = 'admin.cruz@university.edu' WHERE username = 'admin.cruz' AND (full_name IS NULL OR full_name = '' OR email IS NULL OR email = '');
+      UPDATE users SET full_name = 'Karen Dela Cruz', email = 'k.delacruz@university.edu' WHERE username = 'k.delacruz' AND (full_name IS NULL OR full_name = '' OR email IS NULL OR email = '');
+      UPDATE users SET full_name = 'Marco Villanueva', email = 'm.villanueva@university.edu' WHERE username = 'm.villanueva' AND (full_name IS NULL OR full_name = '' OR email IS NULL OR email = '');
+      UPDATE users SET full_name = 'Rina Pascual', email = 'r.pascual@university.edu' WHERE username = 'r.pascual' AND (full_name IS NULL OR full_name = '' OR email IS NULL OR email = '');
       UPDATE users SET full_name = username WHERE full_name IS NULL OR full_name = '';
+      UPDATE users SET email = LOWER(REPLACE(username, ' ', '.')) || '@university.edu' WHERE email IS NULL OR email = '';
     `);
 
     // Ensure Figma staff members exist

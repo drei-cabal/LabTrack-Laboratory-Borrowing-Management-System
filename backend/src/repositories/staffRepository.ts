@@ -9,6 +9,7 @@ interface UserDbRow {
   password_hash: string;
   role: StaffRole;
   full_name: string | null;
+  email: string | null;
   is_active: number;
   created_at: string;
 }
@@ -18,6 +19,7 @@ function toStaffEntity(row: UserDbRow): StaffEntity {
     id: row.id,
     username: row.username,
     full_name: row.full_name || row.username,
+    email: row.email || undefined,
     role: row.role,
     is_active: row.is_active === 1,
     created_at: row.created_at,
@@ -29,13 +31,13 @@ export const staffRepository = {
    * Retrieves all staff accounts with optional filtering by search query and role.
    */
   getAll(search?: string, role?: string): StaffEntity[] {
-    let sql = 'SELECT id, username, password_hash, role, full_name, is_active, created_at FROM users WHERE 1=1';
+    let sql = 'SELECT id, username, password_hash, role, full_name, email, is_active, created_at FROM users WHERE 1=1';
     const params: any[] = [];
 
     if (search && search.trim()) {
       const term = `%${search.trim().toLowerCase()}%`;
-      sql += ' AND (LOWER(full_name) LIKE ? OR LOWER(username) LIKE ?)';
-      params.push(term, term);
+      sql += ' AND (LOWER(full_name) LIKE ? OR LOWER(username) LIKE ? OR LOWER(COALESCE(email, "")) LIKE ?)';
+      params.push(term, term, term);
     }
 
     if (role && role.trim()) {
@@ -56,7 +58,7 @@ export const staffRepository = {
   getById(id: string): StaffEntity | null {
     const row = db
       .prepare<[string], UserDbRow>(
-        'SELECT id, username, password_hash, role, full_name, is_active, created_at FROM users WHERE id = ?'
+        'SELECT id, username, password_hash, role, full_name, email, is_active, created_at FROM users WHERE id = ?'
       )
       .get(id);
 
@@ -69,7 +71,7 @@ export const staffRepository = {
   getByUsername(username: string): (StaffEntity & { password_hash: string }) | null {
     const row = db
       .prepare<[string], UserDbRow>(
-        'SELECT id, username, password_hash, role, full_name, is_active, created_at FROM users WHERE LOWER(username) = LOWER(?)'
+        'SELECT id, username, password_hash, role, full_name, email, is_active, created_at FROM users WHERE LOWER(username) = LOWER(?)'
       )
       .get(username);
 
@@ -103,16 +105,18 @@ export const staffRepository = {
     const now = new Date().toISOString();
     const role = data.role === 'admin' ? 'admin' : 'assistant';
     const fullName = data.full_name.trim();
+    const email = data.email ? data.email.trim().toLowerCase() : null;
 
     db.prepare(
-      `INSERT INTO users (id, username, password_hash, role, full_name, is_active, created_at)
-       VALUES (?, ?, ?, ?, ?, 1, ?)`
-    ).run(id, cleanUsername, passwordHash, role, fullName, now);
+      `INSERT INTO users (id, username, password_hash, role, full_name, email, is_active, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?)`
+    ).run(id, cleanUsername, passwordHash, role, fullName, email, now);
 
     return {
       id,
       username: cleanUsername,
       full_name: fullName,
+      email: email || undefined,
       role,
       is_active: true,
       created_at: now,
@@ -132,6 +136,11 @@ export const staffRepository = {
     if (data.full_name !== undefined) {
       fields.push('full_name = ?');
       params.push(data.full_name.trim());
+    }
+
+    if (data.email !== undefined) {
+      fields.push('email = ?');
+      params.push(data.email ? data.email.trim().toLowerCase() : null);
     }
 
     if (data.username !== undefined) {
