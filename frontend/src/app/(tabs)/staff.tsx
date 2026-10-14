@@ -20,6 +20,7 @@ import { StaffEntity } from '../../types';
 import { useGuardedPress } from '../../utils/guards';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { RoleBadge } from '../../components/ui/RoleBadge';
+import { Fab } from '../../components/ui/Fab';
 
 export default function StaffScreen() {
 
@@ -133,16 +134,11 @@ export default function StaffScreen() {
         />
       )}
 
-      {/* Bottom Right Floating Action Button (FAB) */}
-      <Pressable
+      <Fab
+        icon="add"
+        label="Add Staff"
         onPress={handleAddPress}
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
-        accessibilityRole="button"
-        accessibilityLabel="Add Staff"
-      >
-        <Ionicons name="add" size={20} color="#FFFFFF" />
-        <Text style={styles.fabText}>Add Staff</Text>
-      </Pressable>
+      />
     </SafeAreaView>
   );
 }
@@ -342,37 +338,5 @@ const styles = StyleSheet.create({
     color: AppColors.navy,
     fontSize: 14,
     fontWeight: '600',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: AppColors.navy,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 24,
-    gap: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  fabPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
   },
 });

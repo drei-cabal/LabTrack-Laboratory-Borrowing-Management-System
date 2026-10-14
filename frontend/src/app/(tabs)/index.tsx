@@ -18,6 +18,7 @@ import { ROUTES } from '../../routing/routes';
 import { useGuardedPress } from '../../utils/guards';
 import { DashboardOverdueItem, DashboardRecentTransaction } from '../../types';
 import { StatusBadge } from '../../components/ui/StatusBadge';
+import { Fab } from '../../components/ui/Fab';
 
 
 function formatWelcomeName(name?: string, username?: string): string {
@@ -289,16 +290,11 @@ export default function HomeScreen() {
         </ScrollView>
       )}
 
-      {/* ─── Floating Action Button (FAB) ─── */}
-      <Pressable
+      <Fab
+        icon="add"
+        label="New Transaction"
         onPress={handleNewTransactionPress}
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
-        accessibilityRole="button"
-        accessibilityLabel="New Transaction"
-      >
-        <Ionicons name="add" size={18} color="#FFFFFF" />
-        <Text style={styles.fabText}>New Transaction</Text>
-      </Pressable>
+      />
     </SafeAreaView>
   );
 }
@@ -566,37 +562,5 @@ const styles = StyleSheet.create({
   emptyCardText: {
     fontSize: 13,
     color: '#64748B',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: AppColors.navy,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 24,
-    gap: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  fabPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
   },
 });
