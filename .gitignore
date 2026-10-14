@@ -5,6 +5,7 @@
 
 # Dependencies
 node_modules/
+package-lock.json.bak
 .pnp
 .pnp.js
 .yarn/
@@ -37,6 +38,13 @@ metro-cache/
 # TypeScript
 *.tsbuildinfo
 
+# SQLite Database & Storage
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+backend/labtrack.db
+
 # Debug & tool logs
 *.log
 npm-debug.*
@@ -62,3 +70,6 @@ desktop.ini
 *.swp
 .idea/
 *.orig.*
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

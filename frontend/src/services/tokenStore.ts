@@ -4,30 +4,40 @@ import * as SecureStore from 'expo-secure-store';
 const TOKEN_KEY = 'labtrack_auth_token';
 const USER_KEY = 'labtrack_auth_user';
 
-// Keep a memory fallback for non-browser web runtimes and tests.
+// Keep a memory fallback for non-browser web runtimes and tests
 const webStore: Record<string, string> = {};
 
 function getWebValue(key: string): string | null {
-  if (typeof localStorage !== 'undefined') {
-    return localStorage.getItem(key);
+  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      // In case localStorage is restricted or disabled
+    }
   }
   return webStore[key] ?? null;
 }
 
 function setWebValue(key: string, value: string): void {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(key, value);
-    return;
-  }
   webStore[key] = value;
+  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      // In case localStorage is restricted or disabled
+    }
+  }
 }
 
 function removeWebValue(key: string): void {
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem(key);
-    return;
-  }
   delete webStore[key];
+  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+    try {
+      window.localStorage.removeItem(key);
+    } catch {
+      // In case localStorage is restricted or disabled
+    }
+  }
 }
 
 export const tokenStore = {
@@ -44,7 +54,13 @@ export const tokenStore = {
     await SecureStore.setItemAsync(TOKEN_KEY, token);
   },
 
-  async getUser(): Promise<{ username: string; role: string; id?: string; full_name?: string; is_active?: boolean } | null> {
+  async getUser(): Promise<{
+    username: string;
+    role: string;
+    id?: string;
+    full_name?: string;
+    is_active?: boolean;
+  } | null> {
     let raw: string | null;
     if (Platform.OS === 'web') {
       raw = getWebValue(USER_KEY);
@@ -59,7 +75,13 @@ export const tokenStore = {
     }
   },
 
-  async setUser(user: { username: string; role: string; id?: string; full_name?: string; is_active?: boolean }): Promise<void> {
+  async setUser(user: {
+    username: string;
+    role: string;
+    id?: string;
+    full_name?: string;
+    is_active?: boolean;
+  }): Promise<void> {
     const raw = JSON.stringify(user);
     if (Platform.OS === 'web') {
       setWebValue(USER_KEY, raw);
@@ -67,7 +89,6 @@ export const tokenStore = {
     }
     await SecureStore.setItemAsync(USER_KEY, raw);
   },
-
 
   async clear(): Promise<void> {
     if (Platform.OS === 'web') {

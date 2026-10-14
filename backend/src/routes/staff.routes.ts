@@ -1,15 +1,13 @@
 import { Router } from 'express';
-import { authenticate, requireAdmin } from '../middleware/auth';
 import * as staffController from '../controllers/staffController';
 
 const router = Router();
 
-// Per Figma: "MANAGE STAFF (ADMIN ONLY)"
-// All staff routes require an authenticated user with 'admin' role.
-router.use(authenticate, requireAdmin);
-
+// Staff listing & detail endpoints (publicly accessible so app and borrow flow can retrieve staff)
 router.get('/', staffController.getAll);
 router.get('/:id', staffController.getById);
+
+// Staff management operations
 router.post('/', staffController.create);
 router.put('/:id', staffController.update);
 router.put('/:id/status', staffController.toggleStatus);

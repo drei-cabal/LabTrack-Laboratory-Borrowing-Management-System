@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +24,7 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { StepIndicator } from '../../components/borrow/StepIndicator';
 import { useEquipment } from '../../hooks/useEquipment';
+import { useStaff } from '../../hooks/useStaff';
 import { borrowService } from '../../services/borrowService';
 import { EquipmentWithDetails, BorrowItemInput } from '../../types';
 import { ROUTES } from '../../routing/routes';
@@ -31,32 +34,81 @@ interface SelectedItemState {
   quantity: number;
 }
 
+type BorrowerRole = 'Student' | 'Faculty' | 'Staff' | 'Researcher';
+type EquipmentFilterTab = 'all' | 'available' | 'selected';
+
+const BORROWER_ROLES: BorrowerRole[] = ['Student', 'Faculty', 'Staff', 'Researcher'];
+
+const DURATION_PRESETS = [
+  { label: '1 Day (Overnight)', days: 1 },
+  { label: '3 Days (Standard)', days: 3 },
+  { label: '7 Days (1 Week)', days: 7 },
+  { label: '14 Days (Extended)', days: 14 },
+];
+
+function showNotice(title: string, message: string) {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    window.alert(`${title}\n\n${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
 export default function NewBorrowTransactionScreen() {
   const router = useRouter();
   const { items: equipmentList, loading: loadingEquipment } = useEquipment();
+  const { staff: staffList } = useStaff();
 
-  // Multi-step state: 1, 2, 3, 4
+  // Multi-step: 1: Borrower, 2: Select Items, 3: Schedule, 4: Review & Approve
   const [currentStep, setCurrentStep] = useState<number>(1);
 
-  // Step 1: Borrower Info
-  const [borrowerName, setBorrowerName] = useState('Carlos Mendoza');
-  const [borrowerId, setBorrowerId] = useState('2023-00456');
-  const [purpose, setPurpose] = useState('EE201 Lab Experiment 4 — RLC Circuits');
+  // ─── Step 1: Borrower Information ───────────────────────────────────────────
+  const [borrowerRole, setBorrowerRole] = useState<BorrowerRole>('Student');
+  const [borrowerName, setBorrowerName] = useState('');
+  const [borrowerId, setBorrowerId] = useState('');
+  const [department, setDepartment] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [purpose, setPurpose] = useState('');
   const [errorsStep1, setErrorsStep1] = useState<Record<string, string>>({});
 
-  // Step 2: Selected Items (map by equipment_id)
+  // ─── Step 2: Equipment Selection ────────────────────────────────────────────
+  const [equipmentSearch, setEquipmentSearch] = useState('');
+  const [equipmentFilter, setEquipmentFilter] = useState<EquipmentFilterTab>('all');
   const [selectedItems, setSelectedItems] = useState<Map<string, SelectedItemState>>(new Map());
 
-  // Step 3: Loan Period
+  // ─── Step 3: Loan Period & Schedule ─────────────────────────────────────────
   const [loanPeriodDays, setLoanPeriodDays] = useState('3');
+  const [customDaysActive, setCustomDaysActive] = useState(false);
+  const [handlingNotes, setHandlingNotes] = useState('');
 
-  // Step 4: Photo & Submission
+  // ─── Step 4: Approval & Review ──────────────────────────────────────────────
+  const [authorizedBy, setAuthorizedBy] = useState('Admin Cruz');
+  const [approvalNotes, setApprovalNotes] = useState('');
+  const [acknowledgedPolicy, setAcknowledgedPolicy] = useState(true);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  // Date calculation
+  // Confirmation modal state (cross-platform, works on Web & Native)
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  // ─── Approval Success State ─────────────────────────────────────────────────
+  const [approvedSuccessData, setApprovedSuccessData] = useState<{
+    transactionCode: string;
+    borrowerName: string;
+    totalItems: number;
+    dueDateStr: string;
+    approver: string;
+  } | null>(null);
+
+  // Active staff list for approver selection
+  const activeStaff = useMemo(() => {
+    return staffList.filter((s) => s.is_active);
+  }, [staffList]);
+
+  // Loan period days number
+  const daysNum = Math.max(1, parseInt(loanPeriodDays, 10) || 1);
   const today = new Date();
-  const daysNum = Math.max(1, parseInt(loanPeriodDays, 10) || 3);
   const returnDate = new Date(today.getTime() + daysNum * 86_400_000);
 
   const formatDate = (date: Date) => {
@@ -67,8 +119,40 @@ export default function NewBorrowTransactionScreen() {
     });
   };
 
-  // ─── Step Navigation ────────────────────────────────────────────────────────
+  // ─── Filtered Equipment List ────────────────────────────────────────────────
+  const filteredEquipment = useMemo(() => {
+    return equipmentList.filter((item) => {
+      // Filter tab
+      if (equipmentFilter === 'available' && item.available_quantity <= 0) {
+        return false;
+      }
+      if (equipmentFilter === 'selected' && !selectedItems.has(item.id)) {
+        return false;
+      }
 
+      // Search query
+      if (equipmentSearch.trim()) {
+        const query = equipmentSearch.trim().toLowerCase();
+        const matchesName = item.name.toLowerCase().includes(query);
+        const matchesBrand = (item.brand || '').toLowerCase().includes(query);
+        const matchesModel = (item.model || '').toLowerCase().includes(query);
+        const matchesTag = (item.product_id || '').toLowerCase().includes(query);
+        return matchesName || matchesBrand || matchesModel || matchesTag;
+      }
+
+      return true;
+    });
+  }, [equipmentList, equipmentFilter, selectedItems, equipmentSearch]);
+
+  const totalSelectedUnits = useMemo(() => {
+    let count = 0;
+    for (const item of selectedItems.values()) {
+      count += item.quantity;
+    }
+    return count;
+  }, [selectedItems]);
+
+  // ─── Step Navigation Handlers ───────────────────────────────────────────────
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
@@ -85,7 +169,7 @@ export default function NewBorrowTransactionScreen() {
     const errs: Record<string, string> = {};
     if (!borrowerName.trim()) errs.borrowerName = 'Borrower name is required';
     if (!borrowerId.trim()) errs.borrowerId = 'Student/Staff ID is required';
-    if (!purpose.trim()) errs.purpose = 'Purpose is required';
+    if (!purpose.trim()) errs.purpose = 'Purpose of borrowing is required';
 
     if (Object.keys(errs).length > 0) {
       setErrorsStep1(errs);
@@ -97,7 +181,7 @@ export default function NewBorrowTransactionScreen() {
 
   const handleNextStep2 = () => {
     if (selectedItems.size === 0) {
-      Alert.alert('No Items Selected', 'Please select at least one equipment item to borrow.');
+      showNotice('No Equipment Selected', 'Please select at least one piece of equipment to borrow.');
       return;
     }
     setCurrentStep(3);
@@ -106,14 +190,13 @@ export default function NewBorrowTransactionScreen() {
   const handleNextStep3 = () => {
     const days = parseInt(loanPeriodDays, 10);
     if (isNaN(days) || days < 1) {
-      Alert.alert('Invalid Loan Period', 'Please enter a valid loan duration in days (minimum 1 day).');
+      showNotice('Invalid Loan Duration', 'Please enter a valid loan duration (minimum 1 day).');
       return;
     }
     setCurrentStep(4);
   };
 
-  // ─── Step 2: Equipment selection logic ──────────────────────────────────────
-
+  // ─── Equipment Selection Handlers ───────────────────────────────────────────
   const toggleItemSelection = (item: EquipmentWithDetails) => {
     setSelectedItems((prev) => {
       const next = new Map(prev);
@@ -121,7 +204,7 @@ export default function NewBorrowTransactionScreen() {
         next.delete(item.id);
       } else {
         if (item.available_quantity <= 0) {
-          Alert.alert('Out of Stock', `"${item.name}" has no available units.`);
+          showNotice('Out of Stock', `"${item.name}" currently has 0 available units.`);
           return prev;
         }
         next.set(item.id, { equipment: item, quantity: 1 });
@@ -140,9 +223,9 @@ export default function NewBorrowTransactionScreen() {
       if (newQty <= 0) {
         next.delete(equipmentId);
       } else if (newQty > current.equipment.available_quantity) {
-        Alert.alert(
-          'Maximum Available Reached',
-          `Only ${current.equipment.available_quantity} unit(s) of "${current.equipment.name}" available.`
+        showNotice(
+          'Maximum Stock Limit',
+          `Only ${current.equipment.available_quantity} unit(s) of "${current.equipment.name}" currently available.`
         );
       } else {
         next.set(equipmentId, { ...current, quantity: newQty });
@@ -159,22 +242,20 @@ export default function NewBorrowTransactionScreen() {
     });
   };
 
-  // ─── Step 4: Photo capture logic ────────────────────────────────────────────
-
+  // ─── Photo Capture Handlers ─────────────────────────────────────────────────
   const handleCapturePhoto = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        // Fallback to media library if camera permission is rejected
         const libraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (libraryPermission.status !== 'granted') {
-          Alert.alert('Permission Denied', 'Camera or gallery permission is required to attach photo proof.');
+          showNotice('Permission Denied', 'Camera or photo library permission is required to attach proof.');
           return;
         }
         const result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
-          quality: 0.6,
+          quality: 0.7,
         });
         if (!result.canceled && result.assets[0]) {
           setPhotoUri(result.assets[0].uri);
@@ -184,39 +265,47 @@ export default function NewBorrowTransactionScreen() {
 
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
-        quality: 0.6,
+        quality: 0.7,
       });
 
       if (!result.canceled && result.assets[0]) {
         setPhotoUri(result.assets[0].uri);
       }
     } catch {
-      // If camera fails on simulator or web, use photo library
       try {
         const result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
-          quality: 0.6,
+          quality: 0.7,
         });
         if (!result.canceled && result.assets[0]) {
           setPhotoUri(result.assets[0].uri);
         }
       } catch (err: any) {
-        Alert.alert('Error', err?.message || 'Could not access camera or library.');
+        showNotice('Error', err?.message || 'Could not access camera or library.');
       }
     }
   };
 
-  // ─── Step 4: Approve Transaction ───────────────────────────────────────────
-
+  // ─── Approve Transaction Execution ──────────────────────────────────────────
   const executeApproveTransaction = async () => {
     try {
       setSubmitting(true);
+      setSubmissionError(null);
 
       const itemsPayload: BorrowItemInput[] = Array.from(selectedItems.values()).map((s) => ({
         equipment_id: s.equipment.id,
         quantity: s.quantity,
       }));
+
+      // Assemble structured notes
+      const notesParts: string[] = [];
+      if (borrowerRole) notesParts.push(`Role: ${borrowerRole}`);
+      if (department.trim()) notesParts.push(`Dept: ${department.trim()}`);
+      if (contactNumber.trim()) notesParts.push(`Contact: ${contactNumber.trim()}`);
+      if (handlingNotes.trim()) notesParts.push(`Condition Notes: ${handlingNotes.trim()}`);
+      if (approvalNotes.trim()) notesParts.push(`Approval Notes: ${approvalNotes.trim()}`);
+      const compiledNotes = notesParts.join(' | ');
 
       const res = await borrowService.createTransaction({
         borrower_name: borrowerName.trim(),
@@ -224,71 +313,93 @@ export default function NewBorrowTransactionScreen() {
         purpose: purpose.trim(),
         items: itemsPayload,
         loan_period_days: daysNum,
-        authorized_by: 'Admin Cruz',
+        authorized_by: authorizedBy.trim() || 'Admin Cruz',
         photo_proof: photoUri || undefined,
+        notes: compiledNotes || undefined,
       });
 
-      if (res.success) {
-        Alert.alert('Transaction Approved', 'The borrow transaction has been successfully recorded.', [
-          {
-            text: 'View Transactions',
-            onPress: () => router.replace(ROUTES.BORROW as any),
-          },
-        ]);
+      if (res.success && res.data && res.data.length > 0) {
+        const createdRecords = res.data;
+        const generatedCode = createdRecords[0]?.transaction_code || 'TXN-RECORD';
+
+        setShowConfirmModal(false);
+        setApprovedSuccessData({
+          transactionCode: generatedCode,
+          borrowerName: borrowerName.trim(),
+          totalItems: totalSelectedUnits,
+          dueDateStr: formatDate(returnDate),
+          approver: authorizedBy.trim() || 'Admin Cruz',
+        });
       } else {
-        Alert.alert('Transaction Failed', res.error || 'Failed to record borrow transaction.');
+        const err = res.error || 'Failed to approve and record borrow transaction.';
+        setSubmissionError(err);
+        showNotice('Approval Failed', err);
       }
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'An unexpected error occurred.');
+      const errMsg = err?.message || 'An unexpected error occurred while approving the transaction.';
+      setSubmissionError(errMsg);
+      showNotice('Error', errMsg);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleApproveTransaction = () => {
+  const handleApprovePress = () => {
     if (submitting) return;
 
-    Alert.alert(
-      'Approve Borrow Transaction',
-      `Confirm checkout of ${selectedItems.size} equipment type(s) for ${borrowerName.trim()} (${daysNum} days)?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Approve',
-          style: 'default',
-          onPress: executeApproveTransaction,
-        },
-      ]
-    );
+    if (!acknowledgedPolicy) {
+      setSubmissionError('Please confirm ID verification and borrower acknowledgment checkbox before approving.');
+      return;
+    }
+
+    setSubmissionError(null);
+    setShowConfirmModal(true);
+  };
+
+  const handleResetForm = () => {
+    setApprovedSuccessData(null);
+    setShowConfirmModal(false);
+    setCurrentStep(1);
+    setBorrowerName('');
+    setBorrowerId('');
+    setDepartment('');
+    setContactNumber('');
+    setPurpose('');
+    setSelectedItems(new Map());
+    setLoanPeriodDays('3');
+    setCustomDaysActive(false);
+    setHandlingNotes('');
+    setApprovalNotes('');
+    setPhotoUri(null);
+    setSubmissionError(null);
   };
 
   // ─── Step Title ─────────────────────────────────────────────────────────────
-
   const getStepTitle = () => {
     switch (currentStep) {
       case 1:
-        return 'Borrower Info';
+        return 'Borrower Information';
       case 2:
-        return 'Select Items';
+        return 'Select Equipment';
       case 3:
-        return 'Loan Period';
+        return 'Schedule & Loan Details';
       case 4:
         return 'Review & Approve';
       default:
-        return 'Borrow';
+        return 'New Transaction';
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Screen Header with Back Arrow */}
+      {/* Screen Header */}
       <ScreenHeader
         title="New Transaction"
         showBack
         onBack={handleBack}
       />
 
-      {/* Progress Indicator 1/4 -> 4/4 */}
+      {/* Progress Step Indicator */}
       <StepIndicator
         currentStep={currentStep}
         totalSteps={4}
@@ -305,12 +416,36 @@ export default function NewBorrowTransactionScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* ═══════════════════════════════════════════════════════════════════
-              STEP 1: BORROWER INFO
+              STEP 1: BORROWER INFORMATION
              ═══════════════════════════════════════════════════════════════════ */}
           {currentStep === 1 && (
             <View style={styles.stepContainer}>
+              <View style={styles.sectionHeaderBox}>
+                <Ionicons name="person-circle-outline" size={22} color={AppColors.navy} />
+                <Text style={styles.sectionHeading}>Borrower Details</Text>
+              </View>
+
+              {/* Borrower Role Selector */}
+              <Text style={styles.fieldLabel}>Borrower Role</Text>
+              <View style={styles.roleChipsRow}>
+                {BORROWER_ROLES.map((role) => {
+                  const isSelected = borrowerRole === role;
+                  return (
+                    <Pressable
+                      key={role}
+                      onPress={() => setBorrowerRole(role)}
+                      style={[styles.roleChip, isSelected && styles.roleChipSelected]}
+                    >
+                      <Text style={[styles.roleChipText, isSelected && styles.roleChipTextSelected]}>
+                        {role}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
               <Input
-                label="Borrower Name"
+                label="Full Name *"
                 placeholder="e.g. Carlos Mendoza"
                 value={borrowerName}
                 onChangeText={(val) => {
@@ -321,7 +456,7 @@ export default function NewBorrowTransactionScreen() {
               />
 
               <Input
-                label="Student / Staff ID"
+                label="Student / Staff ID Number *"
                 placeholder="e.g. 2023-00456"
                 value={borrowerId}
                 onChangeText={(val) => {
@@ -332,8 +467,23 @@ export default function NewBorrowTransactionScreen() {
               />
 
               <Input
-                label="Purpose"
-                placeholder="e.g. EE201 Lab Experiment 4 — RLC Circuits"
+                label="Department / College / Course"
+                placeholder="e.g. Electrical & Electronics Engineering"
+                value={department}
+                onChangeText={setDepartment}
+              />
+
+              <Input
+                label="Contact Number / Email"
+                placeholder="e.g. +63 912 345 6789 or cmendoza@univ.edu"
+                keyboardType="email-address"
+                value={contactNumber}
+                onChangeText={setContactNumber}
+              />
+
+              <Input
+                label="Purpose of Borrowing *"
+                placeholder="e.g. EE201 Lab Experiment 4 — RLC Circuits & Signal Analysis"
                 value={purpose}
                 onChangeText={(val) => {
                   setPurpose(val);
@@ -345,46 +495,106 @@ export default function NewBorrowTransactionScreen() {
               />
 
               <Button
-                title="Next"
+                title="Continue to Equipment Selection"
                 variant="primary"
                 onPress={handleNextStep1}
-                style={styles.nextBtn}
+                style={styles.actionBtn}
               />
             </View>
           )}
 
           {/* ═══════════════════════════════════════════════════════════════════
-              STEP 2: SELECT ITEMS
+              STEP 2: SELECT EQUIPMENT
              ═══════════════════════════════════════════════════════════════════ */}
           {currentStep === 2 && (
             <View style={styles.stepContainer}>
-              <Text style={styles.instructionText}>
-                Tap an item to add it to the transaction.
-              </Text>
+              {/* Search Bar */}
+              <View style={styles.searchBox}>
+                <Ionicons name="search-outline" size={18} color="#64748B" />
+                <TextInput
+                  placeholder="Search equipment by name, brand, or tag..."
+                  placeholderTextColor="#94A3B8"
+                  value={equipmentSearch}
+                  onChangeText={setEquipmentSearch}
+                  style={styles.searchInput}
+                  clearButtonMode="while-editing"
+                />
+                {equipmentSearch.length > 0 && (
+                  <Pressable onPress={() => setEquipmentSearch('')} hitSlop={6}>
+                    <Ionicons name="close-circle" size={16} color="#94A3B8" />
+                  </Pressable>
+                )}
+              </View>
 
+              {/* Filter Tabs */}
+              <View style={styles.filterTabsRow}>
+                {(
+                  [
+                    { key: 'all', label: 'All Items' },
+                    { key: 'available', label: 'In Stock' },
+                    { key: 'selected', label: `Selected (${selectedItems.size})` },
+                  ] as { key: EquipmentFilterTab; label: string }[]
+                ).map((tab) => {
+                  const isActive = equipmentFilter === tab.key;
+                  return (
+                    <Pressable
+                      key={tab.key}
+                      onPress={() => setEquipmentFilter(tab.key)}
+                      style={[styles.filterTab, isActive && styles.filterTabActive]}
+                    >
+                      <Text style={[styles.filterTabText, isActive && styles.filterTabTextActive]}>
+                        {tab.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {/* Selected Summary Pill */}
+              {selectedItems.size > 0 && (
+                <View style={styles.selectedCountBanner}>
+                  <Ionicons name="cube" size={16} color={AppColors.navy} />
+                  <Text style={styles.selectedCountBannerText}>
+                    <Text style={{ fontWeight: '700' }}>{selectedItems.size}</Text> equipment type(s) selected (
+                    <Text style={{ fontWeight: '700' }}>{totalSelectedUnits}</Text> unit(s) total)
+                  </Text>
+                </View>
+              )}
+
+              {/* Equipment Item Cards */}
               {loadingEquipment ? (
-                <View style={styles.loadingContainer}>
+                <View style={styles.centerContainer}>
                   <ActivityIndicator size="small" color={AppColors.navy} />
+                  <Text style={styles.loadingText}>Loading equipment inventory...</Text>
+                </View>
+              ) : filteredEquipment.length === 0 ? (
+                <View style={styles.emptyItemsBox}>
+                  <Ionicons name="file-tray-outline" size={32} color="#94A3B8" />
+                  <Text style={styles.emptyItemsTitle}>No equipment found</Text>
+                  <Text style={styles.emptyItemsSub}>
+                    Try modifying your search or filter settings.
+                  </Text>
                 </View>
               ) : (
-                <View style={styles.itemListContainer}>
-                  {equipmentList.map((item) => {
+                <View style={styles.equipmentList}>
+                  {filteredEquipment.map((item) => {
                     const isSelected = selectedItems.has(item.id);
+                    const selectedState = selectedItems.get(item.id);
                     const isAvailable = item.available_quantity > 0;
 
                     return (
-                      <Pressable
+                      <View
                         key={item.id}
-                        onPress={() => isAvailable && toggleItemSelection(item)}
-                        style={({ pressed }) => [
-                          styles.itemCard,
-                          isSelected && styles.itemCardSelected,
-                          !isAvailable && styles.itemCardDisabled,
-                          pressed && isAvailable && styles.itemCardPressed,
+                        style={[
+                          styles.equipmentCard,
+                          isSelected && styles.equipmentCardSelected,
+                          !isAvailable && styles.equipmentCardDisabled,
                         ]}
                       >
-                        <View style={styles.itemCardLeft}>
-                          {/* Checkbox icon */}
+                        <Pressable
+                          onPress={() => isAvailable && toggleItemSelection(item)}
+                          style={styles.equipmentCardMain}
+                        >
                           <View
                             style={[
                               styles.checkbox,
@@ -395,149 +605,372 @@ export default function NewBorrowTransactionScreen() {
                             {isSelected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                           </View>
 
-                          <View style={styles.itemCardInfo}>
-                            <Text
-                              style={[
-                                styles.itemName,
-                                !isAvailable && styles.itemNameDisabled,
-                              ]}
-                            >
-                              {item.name}
-                            </Text>
-                            <Text style={styles.itemAvailText}>
-                              {item.available_quantity}/{item.total_quantity} avail.
-                            </Text>
+                          <View style={styles.equipmentMeta}>
+                            <View style={styles.equipmentTitleRow}>
+                              <Text
+                                style={[
+                                  styles.equipmentName,
+                                  !isAvailable && styles.equipmentNameDisabled,
+                                ]}
+                                numberOfLines={1}
+                              >
+                                {item.name}
+                              </Text>
+                              {item.product_id ? (
+                                <View style={styles.tagBadge}>
+                                  <Text style={styles.tagBadgeText}>{item.product_id}</Text>
+                                </View>
+                              ) : null}
+                            </View>
+
+                            {(item.brand || item.model) && (
+                              <Text style={styles.equipmentSub} numberOfLines={1}>
+                                {[item.brand, item.model].filter(Boolean).join(' • ')}
+                              </Text>
+                            )}
+
+                            <View style={styles.equipmentStockRow}>
+                              <View
+                                style={[
+                                  styles.stockDot,
+                                  { backgroundColor: isAvailable ? '#16A34A' : '#DC2626' },
+                                ]}
+                              />
+                              <Text style={styles.equipmentStockText}>
+                                {item.available_quantity} of {item.total_quantity} available
+                              </Text>
+                            </View>
                           </View>
-                        </View>
-                      </Pressable>
+                        </Pressable>
+
+                        {/* Quantity Stepper (visible when selected) */}
+                        {isSelected && selectedState && (
+                          <View style={styles.itemStepperRow}>
+                            <Text style={styles.stepperLabel}>Requested Qty:</Text>
+                            <View style={styles.stepperControls}>
+                              <Pressable
+                                onPress={() => updateItemQuantity(item.id, -1)}
+                                style={({ pressed }) => [
+                                  styles.stepperBtn,
+                                  pressed && styles.stepperBtnPressed,
+                                ]}
+                                hitSlop={6}
+                              >
+                                <Ionicons name="remove" size={16} color={AppColors.navy} />
+                              </Pressable>
+
+                              <Text style={styles.stepperCount}>{selectedState.quantity}</Text>
+
+                              <Pressable
+                                onPress={() => updateItemQuantity(item.id, 1)}
+                                style={({ pressed }) => [
+                                  styles.stepperBtn,
+                                  pressed && styles.stepperBtnPressed,
+                                  selectedState.quantity >= item.available_quantity &&
+                                    styles.stepperBtnDisabled,
+                                ]}
+                                disabled={selectedState.quantity >= item.available_quantity}
+                                hitSlop={6}
+                              >
+                                <Ionicons name="add" size={16} color={AppColors.navy} />
+                              </Pressable>
+
+                              <Pressable
+                                onPress={() => removeItem(item.id)}
+                                style={({ pressed }) => [
+                                  styles.removeBtn,
+                                  pressed && styles.removeBtnPressed,
+                                ]}
+                                hitSlop={6}
+                              >
+                                <Ionicons name="trash-outline" size={14} color="#EF4444" />
+                              </Pressable>
+                            </View>
+                          </View>
+                        )}
+                      </View>
                     );
                   })}
                 </View>
               )}
 
-              {/* Selected Items summary section with steppers */}
-              {selectedItems.size > 0 && (
-                <View style={styles.selectedSection}>
-                  <Text style={styles.selectedHeader}>
-                    SELECTED ({selectedItems.size})
-                  </Text>
+              <Button
+                title={
+                  selectedItems.size === 0
+                    ? 'Select Equipment to Continue'
+                    : `Proceed with ${selectedItems.size} Selected Item(s)`
+                }
+                variant="primary"
+                onPress={handleNextStep2}
+                disabled={selectedItems.size === 0}
+                style={styles.actionBtn}
+              />
+            </View>
+          )}
 
-                  {Array.from(selectedItems.values()).map((selected) => (
-                    <View key={selected.equipment.id} style={styles.selectedRow}>
-                      <Text style={styles.selectedItemName} numberOfLines={1}>
-                        {selected.equipment.name}
+          {/* ═══════════════════════════════════════════════════════════════════
+              STEP 3: SCHEDULE & LOAN DETAILS
+             ═══════════════════════════════════════════════════════════════════ */}
+          {currentStep === 3 && (
+            <View style={styles.stepContainer}>
+              <View style={styles.sectionHeaderBox}>
+                <Ionicons name="calendar-outline" size={22} color={AppColors.navy} />
+                <Text style={styles.sectionHeading}>Loan Duration & Schedule</Text>
+              </View>
+
+              {/* Quick Duration Presets */}
+              <Text style={styles.fieldLabel}>Loan Duration Preset</Text>
+              <View style={styles.durationPresetsGrid}>
+                {DURATION_PRESETS.map((preset) => {
+                  const isMatch = !customDaysActive && loanPeriodDays === String(preset.days);
+                  return (
+                    <Pressable
+                      key={preset.days}
+                      onPress={() => {
+                        setLoanPeriodDays(String(preset.days));
+                        setCustomDaysActive(false);
+                      }}
+                      style={[styles.presetCard, isMatch && styles.presetCardActive]}
+                    >
+                      <Text style={[styles.presetDaysNumber, isMatch && styles.presetTextActive]}>
+                        {preset.days} {preset.days === 1 ? 'Day' : 'Days'}
                       </Text>
+                      <Text style={[styles.presetLabel, isMatch && styles.presetTextActive]}>
+                        {preset.label.split('(')[1]?.replace(')', '') || 'Preset'}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
 
-                      <View style={styles.stepperContainer}>
-                        <Pressable
-                          onPress={() => updateItemQuantity(selected.equipment.id, -1)}
-                          style={({ pressed }) => [
-                            styles.stepperBtn,
-                            pressed && styles.stepperBtnPressed,
-                          ]}
-                          hitSlop={6}
-                        >
-                          <Ionicons name="remove" size={16} color={AppColors.navy} />
-                        </Pressable>
+              <Pressable
+                onPress={() => setCustomDaysActive(true)}
+                style={[styles.customDaysBtn, customDaysActive && styles.customDaysBtnActive]}
+              >
+                <Ionicons
+                  name={customDaysActive ? 'radio-button-on' : 'radio-button-off'}
+                  size={18}
+                  color={customDaysActive ? AppColors.navy : '#64748B'}
+                />
+                <Text
+                  style={[
+                    styles.customDaysBtnText,
+                    customDaysActive && styles.customDaysBtnTextActive,
+                  ]}
+                >
+                  Custom Duration
+                </Text>
+              </Pressable>
 
-                        <Text style={styles.stepperValue}>{selected.quantity}</Text>
+              {customDaysActive && (
+                <Input
+                  label="Number of Days *"
+                  keyboardType="numeric"
+                  value={loanPeriodDays}
+                  onChangeText={setLoanPeriodDays}
+                  placeholder="e.g. 5"
+                />
+              )}
 
-                        <Pressable
-                          onPress={() => updateItemQuantity(selected.equipment.id, 1)}
-                          style={({ pressed }) => [
-                            styles.stepperBtn,
-                            pressed && styles.stepperBtnPressed,
-                          ]}
-                          hitSlop={6}
-                        >
-                          <Ionicons name="add" size={16} color={AppColors.navy} />
-                        </Pressable>
+              {/* Computed Schedule Card */}
+              <View style={styles.datesCard}>
+                <View style={styles.dateCardHeader}>
+                  <Ionicons name="time-outline" size={18} color={AppColors.navy} />
+                  <Text style={styles.datesHeader}>TRANSACTION TIMELINE</Text>
+                </View>
 
-                        <Pressable
-                          onPress={() => removeItem(selected.equipment.id)}
-                          style={({ pressed }) => [
-                            styles.deleteItemBtn,
-                            pressed && styles.deleteItemBtnPressed,
-                          ]}
-                          hitSlop={6}
-                        >
-                          <Ionicons name="close" size={14} color="#EF4444" />
-                        </Pressable>
+                <View style={styles.dateRow}>
+                  <Text style={styles.dateLabel}>Borrow / Issue Date</Text>
+                  <Text style={styles.dateValue}>{formatDate(today)} (Today)</Text>
+                </View>
+
+                <View style={styles.dateDivider} />
+
+                <View style={styles.dateRow}>
+                  <Text style={styles.dateLabel}>Expected Return Deadline</Text>
+                  <Text style={styles.dateValueBold}>{formatDate(returnDate)}</Text>
+                </View>
+                <Text style={styles.dateHint}>
+                  Items returned after {formatDate(returnDate)} will be flagged automatically as Overdue.
+                </Text>
+              </View>
+
+              {/* Handling / Condition Notes */}
+              <Input
+                label="Equipment Condition / Accessories Handed"
+                placeholder="e.g. Handed with power cable and calibration test leads in working order"
+                value={handlingNotes}
+                onChangeText={setHandlingNotes}
+                multiline
+                numberOfLines={2}
+              />
+
+              <Button
+                title="Review & Approve Transaction"
+                variant="primary"
+                onPress={handleNextStep3}
+                style={styles.actionBtn}
+              />
+            </View>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════
+              STEP 4: REVIEW & APPROVE TRANSACTION
+             ═══════════════════════════════════════════════════════════════════ */}
+          {currentStep === 4 && (
+            <View style={styles.stepContainer}>
+              {/* Approval Header Card */}
+              <View style={styles.approvalBanner}>
+                <View style={styles.approvalStatusPill}>
+                  <View style={styles.approvalStatusDot} />
+                  <Text style={styles.approvalStatusText}>Ready for Approval</Text>
+                </View>
+                <Text style={styles.approvalBannerTitle}>Final Transaction Review</Text>
+                <Text style={styles.approvalBannerSub}>
+                  Verify all details before authorizing release of laboratory equipment.
+                </Text>
+              </View>
+
+              {/* Inline Error Banner if present */}
+              {submissionError && (
+                <View style={styles.errorBannerBox}>
+                  <Ionicons name="alert-circle" size={18} color="#DC2626" />
+                  <Text style={styles.errorBannerText}>{submissionError}</Text>
+                </View>
+              )}
+
+              {/* Organized Summary Card */}
+              <View style={styles.summaryCard}>
+                <Text style={styles.summaryTitle}>TRANSACTION DETAILS</Text>
+
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Borrower</Text>
+                  <View style={styles.summaryValueCol}>
+                    <Text style={styles.summaryValueBold}>{borrowerName}</Text>
+                    <Text style={styles.summaryValueSub}>
+                      {borrowerRole} • ID: {borrowerId}
+                    </Text>
+                    {department.trim() ? (
+                      <Text style={styles.summaryValueSub}>{department}</Text>
+                    ) : null}
+                  </View>
+                </View>
+
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Purpose</Text>
+                  <Text style={styles.summaryValueText} numberOfLines={2}>
+                    {purpose}
+                  </Text>
+                </View>
+
+                <View style={styles.summaryDivider} />
+
+                <Text style={styles.summaryTitle}>EQUIPMENT TO ISSUE ({selectedItems.size} items)</Text>
+                <View style={styles.summaryItemsTable}>
+                  {Array.from(selectedItems.values()).map((s) => (
+                    <View key={s.equipment.id} style={styles.summaryItemRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.summaryItemName}>{s.equipment.name}</Text>
+                        {s.equipment.product_id ? (
+                          <Text style={styles.summaryItemTag}>{s.equipment.product_id}</Text>
+                        ) : null}
+                      </View>
+                      <View style={styles.summaryItemQtyBadge}>
+                        <Text style={styles.summaryItemQtyText}>×{s.quantity}</Text>
                       </View>
                     </View>
                   ))}
                 </View>
-              )}
 
-              <Button
-                title="Next"
-                variant="primary"
-                onPress={handleNextStep2}
-                disabled={selectedItems.size === 0}
-                style={styles.nextBtn}
-              />
-            </View>
-          )}
+                <View style={styles.summaryDivider} />
 
-          {/* ═══════════════════════════════════════════════════════════════════
-              STEP 3: LOAN PERIOD
-             ═══════════════════════════════════════════════════════════════════ */}
-          {currentStep === 3 && (
-            <View style={styles.stepContainer}>
-              <Input
-                label="Loan Period (days)"
-                keyboardType="numeric"
-                value={loanPeriodDays}
-                onChangeText={setLoanPeriodDays}
-                placeholder="3"
-              />
-
-              {/* Computed Dates Card */}
-              <View style={styles.datesCard}>
-                <Text style={styles.datesHeader}>COMPUTED DATES</Text>
-                <View style={styles.dateRow}>
-                  <Text style={styles.dateLabel}>Date Borrowed</Text>
-                  <Text style={styles.dateValue}>{formatDate(today)}</Text>
-                </View>
-                <View style={styles.dateRow}>
-                  <Text style={styles.dateLabel}>Expected Return</Text>
-                  <Text style={styles.dateValueBold}>{formatDate(returnDate)}</Text>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Schedule</Text>
+                  <View style={styles.summaryValueCol}>
+                    <Text style={styles.summaryValueText}>
+                      Borrowed: {formatDate(today)}
+                    </Text>
+                    <Text style={styles.summaryDueHighlight}>
+                      Due: {formatDate(returnDate)} ({daysNum} {daysNum === 1 ? 'day' : 'days'})
+                    </Text>
+                  </View>
                 </View>
               </View>
 
-              <Button
-                title="Next"
-                variant="primary"
-                onPress={handleNextStep3}
-                style={styles.nextBtn}
-              />
-            </View>
-          )}
+              {/* Approving Authority Section */}
+              <View style={styles.approverSection}>
+                <Text style={styles.sectionTitle}>Authorizing Officer</Text>
+                <Text style={styles.approverInstruction}>
+                  Select or specify the staff member authorizing this loan:
+                </Text>
 
-          {/* ═══════════════════════════════════════════════════════════════════
-              STEP 4: PHOTO & REVIEW
-             ═══════════════════════════════════════════════════════════════════ */}
-          {currentStep === 4 && (
-            <View style={styles.stepContainer}>
+                {activeStaff.length > 0 && (
+                  <View style={styles.staffChipsRow}>
+                    {activeStaff.map((st) => {
+                      const isSelected = authorizedBy === st.full_name;
+                      return (
+                        <Pressable
+                          key={st.id}
+                          onPress={() => setAuthorizedBy(st.full_name)}
+                          style={[styles.staffChip, isSelected && styles.staffChipSelected]}
+                        >
+                          <Ionicons
+                            name={isSelected ? 'checkmark-circle' : 'person-outline'}
+                            size={14}
+                            color={isSelected ? '#FFFFFF' : AppColors.navy}
+                          />
+                          <Text style={[styles.staffChipText, isSelected && styles.staffChipTextSelected]}>
+                            {st.full_name} ({st.role})
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
+
+                <Input
+                  label="Authorizing Officer Name"
+                  placeholder="e.g. Admin Cruz"
+                  value={authorizedBy}
+                  onChangeText={setAuthorizedBy}
+                />
+
+                <Input
+                  label="Authorization Remarks / Notes (Optional)"
+                  placeholder="e.g. Inspected and tested with student; borrower briefed on lab rules."
+                  value={approvalNotes}
+                  onChangeText={setApprovalNotes}
+                />
+              </View>
+
               {/* Photo Proof Section */}
               <View style={styles.photoSection}>
-                <Text style={styles.sectionTitle}>Photo Proof</Text>
+                <View style={styles.photoHeaderRow}>
+                  <Text style={styles.sectionTitle}>Handover Photo Proof (Optional)</Text>
+                  {photoUri && (
+                    <Pressable onPress={() => setPhotoUri(null)}>
+                      <Text style={styles.photoClearLink}>Remove</Text>
+                    </Pressable>
+                  )}
+                </View>
 
                 {photoUri ? (
                   <View style={styles.photoPreviewContainer}>
                     <Image source={{ uri: photoUri }} style={styles.photoPreview} />
                     <Pressable
-                      onPress={() => setPhotoUri(null)}
-                      style={styles.photoRemoveBadge}
+                      onPress={handleCapturePhoto}
+                      style={styles.changePhotoBadge}
                     >
-                      <Ionicons name="close" size={14} color="#FFFFFF" />
+                      <Ionicons name="camera" size={14} color="#FFFFFF" />
+                      <Text style={styles.changePhotoText}>Change</Text>
                     </Pressable>
                   </View>
                 ) : (
                   <View style={styles.cameraBox}>
-                    <Ionicons name="camera-outline" size={28} color={AppColors.navy} />
+                    <Ionicons name="camera-outline" size={32} color={AppColors.navy} />
+                    <Text style={styles.cameraTitle}>Attach Physical Proof</Text>
                     <Text style={styles.cameraText}>
-                      Capture photo of items with borrower present
+                      Capture a photo of the equipment with the borrower during handover.
                     </Text>
                     <Pressable
                       onPress={handleCapturePhoto}
@@ -546,66 +979,190 @@ export default function NewBorrowTransactionScreen() {
                         pressed && styles.openCameraBtnPressed,
                       ]}
                     >
-                      <Text style={styles.openCameraBtnText}>Open Camera</Text>
+                      <Ionicons name="camera" size={16} color={AppColors.navy} />
+                      <Text style={styles.openCameraBtnText}>Take Photo / Browse</Text>
                     </Pressable>
                   </View>
                 )}
               </View>
 
-              {/* Summary Card */}
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryTitle}>SUMMARY</Text>
-
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Borrower</Text>
-                  <Text style={styles.summaryValue}>{borrowerName}</Text>
+              {/* Borrower Verification & Acknowledgment Checkbox */}
+              <Pressable
+                onPress={() => {
+                  setAcknowledgedPolicy((prev) => !prev);
+                  if (submissionError) setSubmissionError(null);
+                }}
+                style={styles.acknowledgmentBox}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    acknowledgedPolicy && styles.checkboxSelected,
+                  ]}
+                >
+                  {acknowledgedPolicy && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
                 </View>
+                <Text style={styles.acknowledgmentText}>
+                  I confirm that the borrower presented official identification, the equipment units were inspected, and the borrower agrees to laboratory accountability.
+                </Text>
+              </Pressable>
 
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>ID</Text>
-                  <Text style={styles.summaryValue}>{borrowerId}</Text>
-                </View>
-
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Purpose</Text>
-                  <Text style={styles.summaryValue} numberOfLines={2}>
-                    {purpose}
-                  </Text>
-                </View>
-
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Items</Text>
-                  <Text style={styles.summaryValue}>
-                    {Array.from(selectedItems.values())
-                      .map((s) => `${s.equipment.name} ×${s.quantity}`)
-                      .join(', ')}
-                  </Text>
-                </View>
-
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Due Date</Text>
-                  <Text style={styles.summaryValueBold}>{formatDate(returnDate)}</Text>
-                </View>
-
-                <View style={styles.summaryDivider} />
-
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Authorized By</Text>
-                  <Text style={styles.summaryValue}>Admin Cruz</Text>
-                </View>
-              </View>
-
+              {/* Approve Transaction Button */}
               <Button
-                title="Approve Transaction"
+                title={submitting ? 'Approving Transaction...' : 'Approve & Issue Equipment'}
                 variant="primary"
-                onPress={handleApproveTransaction}
+                onPress={handleApprovePress}
                 loading={submitting}
-                style={styles.nextBtn}
+                disabled={submitting}
+                style={styles.actionBtn}
               />
             </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          CONFIRMATION MODAL (Cross-Platform)
+         ═══════════════════════════════════════════════════════════════════════ */}
+      <Modal
+        visible={showConfirmModal}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowConfirmModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.confirmModalCard}>
+            <View style={styles.confirmIconCircle}>
+              <Ionicons name="shield-checkmark-outline" size={32} color={AppColors.navy} />
+            </View>
+
+            <Text style={styles.confirmModalTitle}>Confirm Equipment Issue</Text>
+            <Text style={styles.confirmModalSub}>
+              Are you sure you want to approve and record this borrow transaction?
+            </Text>
+
+            <View style={styles.confirmDetailsBox}>
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptLabel}>Borrower</Text>
+                <Text style={styles.receiptValue}>{borrowerName} ({borrowerId})</Text>
+              </View>
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptLabel}>Total Equipment</Text>
+                <Text style={styles.receiptValue}>{totalSelectedUnits} unit(s) ({selectedItems.size} type(s))</Text>
+              </View>
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptLabel}>Return Deadline</Text>
+                <Text style={styles.receiptValueDue}>{formatDate(returnDate)} ({daysNum} days)</Text>
+              </View>
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptLabel}>Authorizer</Text>
+                <Text style={styles.receiptValue}>{authorizedBy.trim() || 'Admin Cruz'}</Text>
+              </View>
+            </View>
+
+            <View style={styles.modalActionButtons}>
+              <Button
+                title={submitting ? 'Approving...' : 'Confirm & Issue Equipment'}
+                variant="primary"
+                onPress={executeApproveTransaction}
+                loading={submitting}
+                disabled={submitting}
+              />
+              <Button
+                title="Review Details"
+                variant="secondary"
+                onPress={() => setShowConfirmModal(false)}
+                disabled={submitting}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          APPROVAL SUCCESS RECEIPT MODAL
+         ═══════════════════════════════════════════════════════════════════════ */}
+      <Modal
+        visible={approvedSuccessData !== null}
+        animationType="fade"
+        transparent
+        onRequestClose={() => {}}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.successModalCard}>
+            <View style={styles.successIconCircle}>
+              <Ionicons name="checkmark" size={36} color="#FFFFFF" />
+            </View>
+
+            <Text style={styles.successModalTitle}>Transaction Approved!</Text>
+            <Text style={styles.successModalSub}>
+              The equipment items have been officially checked out and assigned to the borrower.
+            </Text>
+
+            {approvedSuccessData && (
+              <View style={styles.receiptBox}>
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Transaction Code</Text>
+                  <View style={styles.codeBadge}>
+                    <Text style={styles.codeBadgeText}>
+                      {approvedSuccessData.transactionCode}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Borrower</Text>
+                  <Text style={styles.receiptValue}>{approvedSuccessData.borrowerName}</Text>
+                </View>
+
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Total Units</Text>
+                  <Text style={styles.receiptValue}>{approvedSuccessData.totalItems} unit(s)</Text>
+                </View>
+
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Due Date</Text>
+                  <Text style={styles.receiptValueDue}>{approvedSuccessData.dueDateStr}</Text>
+                </View>
+
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Authorized By</Text>
+                  <Text style={styles.receiptValue}>{approvedSuccessData.approver}</Text>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.modalActionButtons}>
+              <Button
+                title="View in Records"
+                variant="primary"
+                onPress={() => {
+                  const code = approvedSuccessData?.transactionCode;
+                  setApprovedSuccessData(null);
+                  if (code) {
+                    router.replace(ROUTES.RECORD_DETAIL(code) as any);
+                  } else {
+                    router.replace(ROUTES.RECORDS as any);
+                  }
+                }}
+              />
+
+              <Button
+                title="Back to Borrow List"
+                variant="secondary"
+                onPress={() => {
+                  setApprovedSuccessData(null);
+                  router.replace(ROUTES.BORROW as any);
+                }}
+              />
+
+              <Pressable onPress={handleResetForm} style={styles.newLoanLink}>
+                <Text style={styles.newLoanLinkText}>+ Create Another Loan</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -620,53 +1177,161 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 48,
   },
   stepContainer: {
     width: '100%',
   },
-  nextBtn: {
+  actionBtn: {
     marginTop: 24,
   },
-  instructionText: {
-    fontSize: 13,
-    color: AppColors.textSecondary,
+  sectionHeaderBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 16,
   },
-  loadingContainer: {
+  sectionHeading: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: AppColors.text,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.text,
+    marginBottom: 8,
+  },
+  roleChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  roleChip: {
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  roleChipSelected: {
+    backgroundColor: AppColors.navy,
+    borderColor: AppColors.navy,
+  },
+  roleChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.textSecondary,
+  },
+  roleChipTextSelected: {
+    color: '#FFFFFF',
+  },
+
+  // Step 2 Styles
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    gap: 8,
+    marginBottom: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: AppColors.text,
+    padding: 0,
+  },
+  filterTabsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  filterTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+  },
+  filterTabActive: {
+    backgroundColor: AppColors.navy,
+  },
+  filterTabText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.textSecondary,
+  },
+  filterTabTextActive: {
+    color: '#FFFFFF',
+  },
+  selectedCountBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+  },
+  selectedCountBannerText: {
+    fontSize: 12,
+    color: AppColors.navy,
+  },
+  centerContainer: {
     paddingVertical: 32,
     alignItems: 'center',
+    gap: 8,
   },
-  itemListContainer: {
+  loadingText: {
+    fontSize: 12,
+    color: AppColors.textSecondary,
+  },
+  emptyItemsBox: {
+    paddingVertical: 36,
+    alignItems: 'center',
+    gap: 6,
+  },
+  emptyItemsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: AppColors.text,
+  },
+  emptyItemsSub: {
+    fontSize: 12,
+    color: AppColors.textSecondary,
+  },
+  equipmentList: {
     gap: 10,
-    marginBottom: 24,
+    marginBottom: 16,
   },
-  itemCard: {
+  equipmentCard: {
     backgroundColor: '#F8FAFC',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 12,
   },
-  itemCardSelected: {
-    backgroundColor: '#EFF6FF',
+  equipmentCardSelected: {
+    backgroundColor: '#F0F9FF',
     borderColor: AppColors.navy,
   },
-  itemCardDisabled: {
+  equipmentCardDisabled: {
     opacity: 0.5,
     backgroundColor: '#F1F5F9',
   },
-  itemCardPressed: {
-    opacity: 0.85,
-  },
-  itemCardLeft: {
+  equipmentCardMain: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
-    flex: 1,
   },
   checkbox: {
     width: 20,
@@ -677,6 +1342,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
+    marginTop: 2,
   },
   checkboxSelected: {
     backgroundColor: AppColors.navy,
@@ -686,87 +1352,161 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0',
     borderColor: '#CBD5E1',
   },
-  itemCardInfo: {
+  equipmentMeta: {
     flex: 1,
+    gap: 2,
   },
-  itemName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: AppColors.text,
-  },
-  itemNameDisabled: {
-    color: AppColors.textMuted,
-  },
-  itemAvailText: {
-    fontSize: 12,
-    color: AppColors.textSecondary,
-    marginTop: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-  },
-  selectedSection: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  selectedHeader: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: AppColors.textSecondary,
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  selectedRow: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+  equipmentTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    gap: 8,
   },
-  selectedItemName: {
-    fontSize: 13,
-    fontWeight: '600',
+  equipmentName: {
+    fontSize: 14,
+    fontWeight: '700',
     color: AppColors.text,
     flex: 1,
-    marginRight: 8,
   },
-  stepperContainer: {
+  equipmentNameDisabled: {
+    color: AppColors.textMuted,
+  },
+  tagBadge: {
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  tagBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: AppColors.navy,
+  },
+  equipmentSub: {
+    fontSize: 12,
+    color: AppColors.textSecondary,
+  },
+  equipmentStockRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  stockDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  equipmentStockText: {
+    fontSize: 11,
+    color: AppColors.textSecondary,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  itemStepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    paddingTop: 8,
+    marginTop: 10,
+  },
+  stepperLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.textSecondary,
+  },
+  stepperControls: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   stepperBtn: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     borderRadius: 6,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepperBtnPressed: {
     backgroundColor: '#E2E8F0',
   },
-  stepperValue: {
-    fontSize: 14,
+  stepperBtnDisabled: {
+    opacity: 0.4,
+  },
+  stepperCount: {
+    fontSize: 13,
     fontWeight: '700',
     color: AppColors.text,
     minWidth: 18,
     textAlign: 'center',
   },
-  deleteItemBtn: {
+  removeBtn: {
     width: 26,
     height: 26,
     borderRadius: 6,
     backgroundColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 4,
+    marginLeft: 6,
   },
-  deleteItemBtnPressed: {
+  removeBtnPressed: {
     backgroundColor: '#FECACA',
+  },
+
+  // Step 3 Styles
+  durationPresetsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 12,
+  },
+  presetCard: {
+    width: '48%',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    gap: 2,
+  },
+  presetCardActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: AppColors.navy,
+  },
+  presetDaysNumber: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: AppColors.text,
+  },
+  presetLabel: {
+    fontSize: 11,
+    color: AppColors.textSecondary,
+  },
+  presetTextActive: {
+    color: AppColors.navy,
+  },
+  customDaysBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
+    paddingVertical: 4,
+  },
+  customDaysBtnActive: {
+    opacity: 1,
+  },
+  customDaysBtnText: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  customDaysBtnTextActive: {
+    color: AppColors.navy,
   },
   datesCard: {
     backgroundColor: '#F8FAFC',
@@ -774,8 +1514,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: 16,
-    gap: 12,
-    marginTop: 8,
+    gap: 10,
+    marginBottom: 16,
+  },
+  dateCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   datesHeader: {
     fontSize: 11,
@@ -802,71 +1547,74 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: AppColors.navy,
   },
-  photoSection: {
-    marginBottom: 20,
+  dateDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
   },
-  sectionTitle: {
-    fontSize: 14,
+  dateHint: {
+    fontSize: 11,
+    color: '#64748B',
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+
+  // Step 4 Styles
+  approvalBanner: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 16,
+  },
+  approvalStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginBottom: 6,
+  },
+  approvalStatusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16A34A',
+  },
+  approvalStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#16A34A',
+  },
+  approvalBannerTitle: {
+    fontSize: 15,
     fontWeight: '700',
     color: AppColors.text,
-    marginBottom: 10,
   },
-  cameraBox: {
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-    gap: 8,
-  },
-  cameraText: {
+  approvalBannerSub: {
     fontSize: 12,
     color: AppColors.textSecondary,
-    textAlign: 'center',
-    maxWidth: 220,
+    marginTop: 2,
   },
-  openCameraBtn: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginTop: 6,
-  },
-  openCameraBtnPressed: {
-    backgroundColor: '#F1F5F9',
-  },
-  openCameraBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: AppColors.text,
-  },
-  photoPreviewContainer: {
-    width: '100%',
-    height: 160,
-    borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  photoPreview: {
-    width: '100%',
-    height: '100%',
-  },
-  photoRemoveBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#EF4444',
+  errorBannerBox: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    fontSize: 12,
+    color: '#DC2626',
+    fontWeight: '600',
+    flex: 1,
   },
   summaryCard: {
     backgroundColor: '#F8FAFC',
@@ -875,6 +1623,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     padding: 16,
     gap: 10,
+    marginBottom: 16,
   },
   summaryTitle: {
     fontSize: 11,
@@ -887,29 +1636,373 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: 12,
   },
   summaryLabel: {
     fontSize: 12,
     color: AppColors.textSecondary,
-    width: 90,
+    width: 80,
   },
-  summaryValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: AppColors.text,
+  summaryValueCol: {
     flex: 1,
-    textAlign: 'right',
+    alignItems: 'flex-end',
+    gap: 2,
   },
   summaryValueBold: {
     fontSize: 13,
     fontWeight: '700',
-    color: AppColors.navy,
+    color: AppColors.text,
+    textAlign: 'right',
+  },
+  summaryValueSub: {
+    fontSize: 11,
+    color: AppColors.textSecondary,
+    textAlign: 'right',
+  },
+  summaryValueText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: AppColors.text,
     flex: 1,
+    textAlign: 'right',
+  },
+  summaryDueHighlight: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppColors.navy,
     textAlign: 'right',
   },
   summaryDivider: {
     height: 1,
     backgroundColor: '#E2E8F0',
     marginVertical: 4,
+  },
+  summaryItemsTable: {
+    gap: 6,
+  },
+  summaryItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  summaryItemName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  summaryItemTag: {
+    fontSize: 10,
+    color: AppColors.textSecondary,
+  },
+  summaryItemQtyBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  summaryItemQtyText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: AppColors.navy,
+  },
+  approverSection: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: AppColors.text,
+    marginBottom: 4,
+  },
+  approverInstruction: {
+    fontSize: 12,
+    color: AppColors.textSecondary,
+    marginBottom: 10,
+  },
+  staffChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  staffChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  staffChipSelected: {
+    backgroundColor: AppColors.navy,
+    borderColor: AppColors.navy,
+  },
+  staffChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  staffChipTextSelected: {
+    color: '#FFFFFF',
+  },
+  photoSection: {
+    marginBottom: 16,
+  },
+  photoHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  photoClearLink: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#EF4444',
+  },
+  cameraBox: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    gap: 6,
+  },
+  cameraTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppColors.text,
+  },
+  cameraText: {
+    fontSize: 11,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 260,
+  },
+  openCameraBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginTop: 6,
+  },
+  openCameraBtnPressed: {
+    backgroundColor: '#F1F5F9',
+  },
+  openCameraBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: AppColors.navy,
+  },
+  photoPreviewContainer: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  photoPreview: {
+    width: '100%',
+    height: '100%',
+  },
+  changePhotoBadge: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+  },
+  changePhotoText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  acknowledgmentBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  acknowledgmentText: {
+    fontSize: 12,
+    color: AppColors.text,
+    flex: 1,
+    lineHeight: 18,
+  },
+
+  // Modal Styles
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  confirmModalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  confirmIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  confirmModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: AppColors.text,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  confirmModalSub: {
+    fontSize: 12,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  confirmDetailsBox: {
+    width: '100%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    gap: 8,
+    marginBottom: 18,
+  },
+  successModalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  successIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#16A34A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  successModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: AppColors.text,
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  successModalSub: {
+    fontSize: 13,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+  },
+  receiptBox: {
+    width: '100%',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    gap: 10,
+    marginBottom: 20,
+  },
+  receiptRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  receiptLabel: {
+    fontSize: 12,
+    color: AppColors.textSecondary,
+  },
+  receiptValue: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  receiptValueDue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: AppColors.navy,
+  },
+  codeBadge: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  codeBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: AppColors.navy,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  modalActionButtons: {
+    width: '100%',
+    gap: 10,
+  },
+  newLoanLink: {
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  newLoanLinkText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.navy,
   },
 });
