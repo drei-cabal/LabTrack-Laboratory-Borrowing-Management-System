@@ -42,7 +42,12 @@ export default function RootLayout() {
         <Stack.Screen name="equipment/add" options={{ headerShown: false }} />
         <Stack.Screen name="equipment/edit/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="borrow/new" options={{ headerShown: false }} />
+        <Stack.Screen name="records/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="records/return" options={{ headerShown: false }} />
+        <Stack.Screen name="staff/add" options={{ headerShown: false }} />
+        <Stack.Screen name="staff/[id]" options={{ headerShown: false }} />
       </Stack>
+
     </SafeAreaProvider>
   );
 }

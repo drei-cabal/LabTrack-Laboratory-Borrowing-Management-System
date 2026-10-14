@@ -2,7 +2,17 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { AppColors } from '../../constants/colors';
 
-export type BadgeType = 'Available' | 'Partial' | 'Out' | 'overdue' | 'borrowed' | 'returned';
+export type BadgeType =
+  | 'Available'
+  | 'Partial'
+  | 'Out'
+  | 'overdue'
+  | 'borrowed'
+  | 'returned'
+  | 'active'
+  | 'inactive'
+  | 'Active'
+  | 'Inactive';
 
 export interface StatusBadgeProps {
   status: BadgeType;
@@ -14,20 +24,20 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   let bgColor = AppColors.partialBg;
   let dotColor = AppColors.partial;
 
-  switch (status) {
-    case 'Available':
+  switch (status.toLowerCase()) {
+    case 'available':
       label = 'Available';
       textColor = AppColors.available;
       bgColor = AppColors.availableBg;
       dotColor = AppColors.available;
       break;
-    case 'Partial':
+    case 'partial':
       label = 'Partial';
-      textColor = '#475569';
-      bgColor = '#F1F5F9';
-      dotColor = '#475569';
+      textColor = AppColors.partial;
+      bgColor = AppColors.partialBg;
+      dotColor = AppColors.partial;
       break;
-    case 'Out':
+    case 'out':
       label = 'Out';
       textColor = AppColors.out;
       bgColor = AppColors.outBg;
@@ -47,11 +57,24 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       break;
     case 'returned':
       label = 'Returned';
-      textColor = AppColors.available;
-      bgColor = AppColors.availableBg;
-      dotColor = AppColors.available;
+      textColor = AppColors.returned;
+      bgColor = AppColors.returnedBg;
+      dotColor = AppColors.returned;
+      break;
+    case 'active':
+      label = 'Active';
+      textColor = AppColors.active;
+      bgColor = AppColors.activeBg;
+      dotColor = AppColors.active;
+      break;
+    case 'inactive':
+      label = 'Inactive';
+      textColor = AppColors.inactive;
+      bgColor = AppColors.inactiveBg;
+      dotColor = AppColors.grayLight;
       break;
   }
+
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>

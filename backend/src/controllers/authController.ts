@@ -9,7 +9,9 @@ interface UserRow {
   id: string;
   username: string;
   password_hash: string;
-  role: 'admin' | 'staff';
+  role: 'admin' | 'assistant' | 'staff';
+  full_name?: string;
+  is_active?: number;
   created_at: string;
 }
 
@@ -43,6 +45,16 @@ export async function login(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    // Check if account is active
+    if (user.is_active === 0) {
+      res.status(403).json({
+        success: false,
+        error: 'Account is deactivated. Contact an administrator.',
+        statusCode: 403,
+      });
+      return;
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!passwordMatch) {
@@ -64,10 +76,17 @@ export async function login(req: Request, res: Response): Promise<void> {
       res,
       {
         token,
-        user: { username: user.username, role: user.role },
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          full_name: user.full_name ?? user.username,
+          is_active: user.is_active !== 0,
+        },
       },
       'Login successful.'
     );
+
   } catch (error) {
     handleError(res, error, 'authController.login');
   }

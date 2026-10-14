@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { ROUTES } from '../routing/routes';
 
 import { authService } from '../services/authService';
+import '../login-focus.css';
 
 const navy = '#0A234A';
 
@@ -58,10 +59,18 @@ export default function LoginScreen() {
         return;
       }
 
-      router.replace(ROUTES.EQUIPMENT as any);
+      router.replace(ROUTES.HOME as any);
+    } catch (error: unknown) {
+      setHasError(true);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Unable to sign in. Please check the backend connection and try again.'
+      );
     } finally {
       setLoggingIn(false);
     }
+
   };
 
   return (
@@ -86,7 +95,7 @@ export default function LoginScreen() {
           {/* Form section */}
           <View style={styles.form}>
             <Text style={styles.label}>Username</Text>
-            <View style={styles.inputWrapper}>
+            <View id="labtrack-login-username" style={styles.inputWrapper}>
               <TextInput
                 accessibilityLabel="Username"
                 autoCapitalize="none"
@@ -105,6 +114,7 @@ export default function LoginScreen() {
 
             <Text style={[styles.label, styles.passwordLabel]}>Password</Text>
             <View
+              id="labtrack-login-password"
               style={[
                 styles.inputWrapper,
                 hasError ? styles.inputWrapperError : null,

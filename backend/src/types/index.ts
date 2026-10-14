@@ -38,6 +38,8 @@ export interface BorrowRecordEntity {
   authorized_by?: string;
   photo_proof?: string;
   quantity: number;
+  transaction_code?: string;
+  return_remarks?: string;
   created_at?: string;
 }
 
@@ -66,14 +68,102 @@ export interface CreateBorrowTransactionPayload {
   notes?: string;
 }
 
-// ─── Users ────────────────────────────────────────────────────────────────────
+export interface TransactionSummary {
+  transaction_code: string;
+  borrower_name: string;
+  borrower_id: string;
+  purpose?: string;
+  borrow_date: string;
+  due_date: string;
+  return_date?: string;
+  status: BorrowStatus;
+  authorized_by?: string;
+  notes?: string;
+  return_remarks?: string;
+  photo_proof?: string;
+  items_summary: string;
+  total_items: number;
+  items: BorrowRecordWithEquipment[];
+}
+
+export interface ReturnTransactionPayload {
+  transaction_code?: string;
+  record_ids?: string[];
+  return_date?: string;
+  return_remarks?: string;
+}
+
+// ─── Users & Staff ────────────────────────────────────────────────────────────
+
+export type StaffRole = 'admin' | 'assistant' | 'staff';
 
 export interface UserEntity {
   id: string;
   username: string;
   password_hash: string;
-  role: 'admin' | 'staff';
+  role: StaffRole;
+  full_name?: string;
+  is_active: number;
   created_at: string;
+}
+
+export interface StaffEntity {
+  id: string;
+  username: string;
+  full_name: string;
+  role: StaffRole;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CreateStaffPayload {
+  username: string;
+  full_name: string;
+  password: string;
+  role: StaffRole;
+}
+
+export interface UpdateStaffPayload {
+  username?: string;
+  full_name?: string;
+  password?: string;
+  role?: StaffRole;
+  is_active?: boolean;
+}
+
+
+// ─── Dashboard ─────────────────────────────────────────────────────────────
+
+export interface DashboardStats {
+  total_equipment: number;
+  total_borrowed: number;
+  total_overdue: number;
+}
+
+export interface DashboardOverdueItem {
+  id: string;
+  transaction_code: string;
+  title: string;
+  borrower_name: string;
+  due_date: string;
+  days_late: number;
+  days_late_label: string;
+}
+
+export interface DashboardRecentTransaction {
+  id: string;
+  transaction_code: string;
+  title: string;
+  borrower_name: string;
+  status: BorrowStatus;
+  borrow_date: string;
+  due_date: string;
+}
+
+export interface DashboardData {
+  stats: DashboardStats;
+  overdue_items: DashboardOverdueItem[];
+  recent_transactions: DashboardRecentTransaction[];
 }
 
 // ─── API Response ─────────────────────────────────────────────────────────────
@@ -86,3 +176,4 @@ export interface ApiResponse<T = unknown> {
   errors?: string[];
   statusCode: number;
 }
+
