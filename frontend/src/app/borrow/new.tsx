@@ -46,6 +46,27 @@ const DURATION_PRESETS = [
   { label: '14 Days (Extended)', days: 14 },
 ];
 
+const SCHEDULE_PRESETS = [
+  { label: 'Today — Morning (8:00 AM – 12:00 PM)', value: 'Today — Morning (8:00 AM – 12:00 PM)', icon: 'sunny-outline' as const },
+  { label: 'Today — Afternoon (1:00 PM – 5:00 PM)', value: 'Today — Afternoon (1:00 PM – 5:00 PM)', icon: 'partly-sunny-outline' as const },
+  { label: 'Today — Full Day (8:00 AM – 5:00 PM)', value: 'Today — Full Day (8:00 AM – 5:00 PM)', icon: 'time-outline' as const },
+  { label: 'Tomorrow — Morning (8:00 AM – 12:00 PM)', value: 'Tomorrow — Morning (8:00 AM – 12:00 PM)', icon: 'sunny-outline' as const },
+  { label: 'Tomorrow — Afternoon (1:00 PM – 5:00 PM)', value: 'Tomorrow — Afternoon (1:00 PM – 5:00 PM)', icon: 'partly-sunny-outline' as const },
+  { label: 'Tomorrow — Full Day (8:00 AM – 5:00 PM)', value: 'Tomorrow — Full Day (8:00 AM – 5:00 PM)', icon: 'time-outline' as const },
+  { label: 'MWF Schedule (8:30 AM – 11:30 AM)', value: 'MWF Schedule (8:30 AM – 11:30 AM)', icon: 'calendar-outline' as const },
+  { label: 'TTH Schedule (1:30 PM – 4:30 PM)', value: 'TTH Schedule (1:30 PM – 4:30 PM)', icon: 'calendar-outline' as const },
+  { label: 'Saturday Lab (8:00 AM – 1:00 PM)', value: 'Saturday Lab (8:00 AM – 1:00 PM)', icon: 'calendar-outline' as const },
+  { label: 'Custom Schedule / Specific Date...', value: '__custom__', icon: 'create-outline' as const },
+];
+
+const COURSE_PRESETS = ['BS EE', 'BS CpE', 'BS ECE', 'BS ME', 'BS CE', 'BS CS'];
+const PURPOSE_PRESETS = [
+  'Lab Experiment / Practical',
+  'Capstone / Thesis Project',
+  'Class Lecture & Demo',
+  'Faculty Research',
+];
+
 function showNotice(title: string, message: string) {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     window.alert(`${title}\n\n${message}`);
@@ -71,7 +92,10 @@ export default function NewBorrowTransactionScreen() {
   const [subject, setSubject] = useState('');
   const [subjectCode, setSubjectCode] = useState('');
   const [teacherName, setTeacherName] = useState('');
-  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('Today — Morning (8:00 AM – 12:00 PM)');
+  const [customScheduleText, setCustomScheduleText] = useState('');
+  const [isCustomSchedule, setIsCustomSchedule] = useState(false);
+  const [showScheduleDropdown, setShowScheduleDropdown] = useState(false);
   const [contactNumber, setContactNumber] = useState('');
   const [purpose, setPurpose] = useState('');
   const [errorsStep1, setErrorsStep1] = useState<Record<string, string>>({});
@@ -377,7 +401,10 @@ export default function NewBorrowTransactionScreen() {
     setSubject('');
     setSubjectCode('');
     setTeacherName('');
-    setScheduleDate('');
+    setScheduleDate('Today — Morning (8:00 AM – 12:00 PM)');
+    setCustomScheduleText('');
+    setIsCustomSchedule(false);
+    setShowScheduleDropdown(false);
     setContactNumber('');
     setPurpose('');
     setSelectedItems(new Map());
@@ -509,6 +536,21 @@ export default function NewBorrowTransactionScreen() {
                 onChangeText={setCourse}
               />
 
+              {/* Quick Course Presets */}
+              <View style={styles.quickChipsRow}>
+                {COURSE_PRESETS.map((c) => (
+                  <Pressable
+                    key={c}
+                    onPress={() => setCourse(c)}
+                    style={[styles.quickChip, course === c && styles.quickChipActive]}
+                  >
+                    <Text style={[styles.quickChipText, course === c && styles.quickChipTextActive]}>
+                      {c}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
               {/* Subject name + code on same row */}
               <View style={styles.rowFields}>
                 <View style={styles.rowFieldFlex}>
@@ -536,17 +578,127 @@ export default function NewBorrowTransactionScreen() {
                 onChangeText={setTeacherName}
               />
 
-              <Input
-                label="Schedule / Date of Use"
-                placeholder="e.g. Oct 16, 2026  8:00 AM – 12:00 PM"
-                value={scheduleDate}
-                onChangeText={setScheduleDate}
-              />
+              {/* ── Schedule / Date of Use (Dropdown & Quick Presets) ─────────── */}
+              <View style={styles.scheduleFieldGroup}>
+                <Text style={styles.fieldLabel}>Schedule / Date of Use</Text>
+                <Pressable
+                  onPress={() => setShowScheduleDropdown(true)}
+                  style={styles.dropdownTrigger}
+                >
+                  <View style={styles.dropdownTriggerContent}>
+                    <Ionicons name="time-outline" size={18} color={AppColors.navy} />
+                    <Text
+                      style={[
+                        styles.dropdownTriggerText,
+                        !scheduleDate && styles.dropdownTriggerPlaceholder,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {scheduleDate || 'Select laboratory schedule or date...'}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-down" size={18} color="#64748B" />
+                </Pressable>
+
+                {/* Quick Schedule 1-tap pills */}
+                <View style={styles.quickChipsRow}>
+                  <Pressable
+                    onPress={() => {
+                      setScheduleDate('Today — Morning (8:00 AM – 12:00 PM)');
+                      setIsCustomSchedule(false);
+                    }}
+                    style={[
+                      styles.quickChip,
+                      scheduleDate.startsWith('Today — Morning') && styles.quickChipActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.quickChipText,
+                        scheduleDate.startsWith('Today — Morning') && styles.quickChipTextActive,
+                      ]}
+                    >
+                      Today 8–12 AM
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      setScheduleDate('Today — Afternoon (1:00 PM – 5:00 PM)');
+                      setIsCustomSchedule(false);
+                    }}
+                    style={[
+                      styles.quickChip,
+                      scheduleDate.startsWith('Today — Afternoon') && styles.quickChipActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.quickChipText,
+                        scheduleDate.startsWith('Today — Afternoon') && styles.quickChipTextActive,
+                      ]}
+                    >
+                      Today 1–5 PM
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      setScheduleDate('Tomorrow — Morning (8:00 AM – 12:00 PM)');
+                      setIsCustomSchedule(false);
+                    }}
+                    style={[
+                      styles.quickChip,
+                      scheduleDate.startsWith('Tomorrow — Morning') && styles.quickChipActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.quickChipText,
+                        scheduleDate.startsWith('Tomorrow — Morning') && styles.quickChipTextActive,
+                      ]}
+                    >
+                      Tomorrow 8–12 AM
+                    </Text>
+                  </Pressable>
+                </View>
+
+                {/* Custom schedule input if custom is chosen */}
+                {isCustomSchedule && (
+                  <View style={{ marginTop: 8 }}>
+                    <Input
+                      label="Specific Custom Schedule"
+                      placeholder="e.g. Oct 20, 2026 8:00 AM – 11:30 AM (Lab 304)"
+                      value={customScheduleText}
+                      onChangeText={(val) => {
+                        setCustomScheduleText(val);
+                        setScheduleDate(val);
+                      }}
+                    />
+                  </View>
+                )}
+              </View>
 
               {/* ── Purpose ───────────────────────────────────────────────── */}
               <View style={styles.sectionHeaderBox}>
                 <Ionicons name="document-text-outline" size={20} color={AppColors.navy} />
                 <Text style={styles.sectionHeading}>Purpose of Borrowing</Text>
+              </View>
+
+              {/* Quick Purpose Pills */}
+              <View style={styles.quickChipsRow}>
+                {PURPOSE_PRESETS.map((p) => (
+                  <Pressable
+                    key={p}
+                    onPress={() => {
+                      setPurpose(p);
+                      if (errorsStep1.purpose) setErrorsStep1((prev) => ({ ...prev, purpose: '' }));
+                    }}
+                    style={[styles.quickChip, purpose === p && styles.quickChipActive]}
+                  >
+                    <Text style={[styles.quickChipText, purpose === p && styles.quickChipTextActive]}>
+                      {p}
+                    </Text>
+                  </Pressable>
+                ))}
               </View>
 
               <Input
@@ -1230,6 +1382,79 @@ export default function NewBorrowTransactionScreen() {
             </View>
           </View>
         </View>
+      </Modal>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          SCHEDULE / DATE OF USE DROPDOWN MODAL
+         ═══════════════════════════════════════════════════════════════════════ */}
+      <Modal
+        visible={showScheduleDropdown}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowScheduleDropdown(false)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setShowScheduleDropdown(false)}>
+          <Pressable style={styles.dropdownModalCard} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.dropdownModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="time-outline" size={20} color={AppColors.navy} />
+                <Text style={styles.dropdownModalTitle}>Select Laboratory Schedule</Text>
+              </View>
+              <Pressable onPress={() => setShowScheduleDropdown(false)} hitSlop={8}>
+                <Ionicons name="close" size={20} color="#64748B" />
+              </Pressable>
+            </View>
+
+            <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
+              {SCHEDULE_PRESETS.map((item) => {
+                const isSelected =
+                  item.value === '__custom__'
+                    ? isCustomSchedule
+                    : !isCustomSchedule && scheduleDate === item.value;
+
+                return (
+                  <Pressable
+                    key={item.label}
+                    onPress={() => {
+                      if (item.value === '__custom__') {
+                        setIsCustomSchedule(true);
+                        if (!customScheduleText) {
+                          setCustomScheduleText('Oct 16, 2026 8:00 AM – 11:30 AM');
+                          setScheduleDate('Oct 16, 2026 8:00 AM – 11:30 AM');
+                        } else {
+                          setScheduleDate(customScheduleText);
+                        }
+                      } else {
+                        setIsCustomSchedule(false);
+                        setScheduleDate(item.value);
+                      }
+                      setShowScheduleDropdown(false);
+                    }}
+                    style={[
+                      styles.dropdownOption,
+                      isSelected && styles.dropdownOptionSelected,
+                    ]}
+                  >
+                    <Ionicons
+                      name={item.icon}
+                      size={18}
+                      color={isSelected ? AppColors.navy : '#64748B'}
+                    />
+                    <Text
+                      style={[
+                        styles.dropdownOptionText,
+                        isSelected && styles.dropdownOptionTextSelected,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    {isSelected && <Ionicons name="checkmark" size={18} color={AppColors.navy} />}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
       </Modal>
     </SafeAreaView>
   );
@@ -2084,5 +2309,109 @@ const styles = StyleSheet.create({
   },
   rowFieldShort: {
     flex: 1,
+  },
+  // ─── Schedule Dropdown & Presets ───────────────────────────────────────────
+  scheduleFieldGroup: {
+    marginBottom: 16,
+  },
+  dropdownTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  dropdownTriggerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  dropdownTriggerText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: AppColors.text,
+  },
+  dropdownTriggerPlaceholder: {
+    color: '#94A3B8',
+    fontWeight: '400',
+  },
+  dropdownModalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  dropdownModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    paddingBottom: 12,
+    marginBottom: 8,
+  },
+  dropdownModalTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: AppColors.text,
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  dropdownOptionSelected: {
+    backgroundColor: '#EFF6FF',
+  },
+  dropdownOptionText: {
+    fontSize: 13,
+    color: AppColors.text,
+    flex: 1,
+  },
+  dropdownOptionTextSelected: {
+    color: AppColors.navy,
+    fontWeight: '700',
+  },
+  // ─── Quick Presets Row & Chips ─────────────────────────────────────────────
+  quickChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  quickChip: {
+    backgroundColor: '#F1F5F9',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  quickChipActive: {
+    backgroundColor: AppColors.navy,
+    borderColor: AppColors.navy,
+  },
+  quickChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  quickChipTextActive: {
+    color: '#FFFFFF',
   },
 });
