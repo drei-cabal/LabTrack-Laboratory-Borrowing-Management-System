@@ -1,75 +1,46 @@
-# Repo-local tooling
-.github/copilot-instructions.md
-.kilo/
-.claude/
-
-# Dependencies
+# ─── Dependencies ───────────────────────────────────────────────────────────────
 node_modules/
-package-lock.json.bak
-.pnp
-.pnp.js
-.yarn/
 
-# Expo / React Native build output
+# ─── Expo / React Native ────────────────────────────────────────────────────────
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# Generated native projects (Continuous Native Generation)
-/ios/
-/android/
+# ─── Native build outputs ────────────────────────────────────────────────────────
+/ios
+/android
 .kotlin/
-ios/
-android/
-
-# Native signing & secrets
+*.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-*.pem
 
-# Metro bundler
+# ─── Metro ───────────────────────────────────────────────────────────────────────
 .metro-health-check*
-metro-cache/
 
-# TypeScript
-*.tsbuildinfo
+# ─── Backend build ───────────────────────────────────────────────────────────────
+backend/dist/
+backend/*.db
+backend/*.sqlite
 
-# SQLite Database & Storage
-*.db
-*.sqlite
-*.sqlite3
-*.db-journal
-backend/labtrack.db
+# ─── Environment files ───────────────────────────────────────────────────────────
+.env
+.env.local
+.env*.local
 
-# Debug & tool logs
-*.log
+# ─── Debug / logs ────────────────────────────────────────────────────────────────
 npm-debug.*
 yarn-debug.*
 yarn-error.*
-pnpm-debug.*
-lerna-debug.*
+*.log
 
-# Local env files (never commit secrets)
-.env
-.env.*
-!.env.example
-.env*.local
+# ─── TypeScript ──────────────────────────────────────────────────────────────────
+*.tsbuildinfo
 
-# Testing / coverage
-coverage/
-.nyc_output/
-
-# Editor & OS junk
+# ─── OS / Editor ─────────────────────────────────────────────────────────────────
 .DS_Store
-Thumbs.db
-desktop.ini
-*.swp
-.idea/
-*.orig.*
-.vscode/*
-!.vscode/settings.json
-!.vscode/extensions.json
+*.pem
+.vscode/settings.json
