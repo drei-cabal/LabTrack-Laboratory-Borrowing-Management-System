@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { recordService } from '../services/recordService';
-import type { TransactionSummary, ReturnTransactionPayload } from '../types';
+import type { TransactionSummary, ReturnTransactionPayload, TransactionStatusFilter } from '../types';
 
-export function useRecords(initialFilter: string = 'all') {
+export function useRecords(initialFilter: TransactionStatusFilter = 'all') {
   const [transactions, setTransactions] = useState<TransactionSummary[]>([]);
-  const [filter, setFilter] = useState<string>(initialFilter);
+  const [filter, setFilter] = useState<TransactionStatusFilter>(initialFilter);
   const [search, setSearch] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);

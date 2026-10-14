@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -40,45 +40,43 @@ export default function ReturnItemScreen() {
   const [dateTimeReturned, setDateTimeReturned] = useState('');
   const [remarks, setRemarks] = useState('All units returned in good working condition.');
 
-  useEffect(() => {
-    setDateTimeReturned(formatDateTimeDisplay());
-    fetchActiveTransactions();
+  const handleSelectTransaction = useCallback((tx: TransactionSummary) => {
+    setSelectedTxCode(tx.transaction_code);
+    const activeIds = new Set(
+      tx.items.filter((i) => i.status !== 'returned').map((i) => i.id)
+    );
+    setSelectedItemIds(activeIds);
   }, []);
 
-  const fetchActiveTransactions = async () => {
+  const fetchActiveTransactions = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await recordService.getTransactions('all');
+      const res = await recordService.getTransactions('active');
       if (res.success && res.data) {
-        // Only transactions with active (borrowed/overdue) items
-        const activeOnly = res.data.filter(
-          (tx) => tx.status === 'borrowed' || tx.status === 'overdue'
-        );
-        setTransactions(activeOnly);
+        setTransactions(res.data);
 
         // Preselect if passed from detail or route params
         if (preselectedCode) {
-          const match = activeOnly.find((t) => t.transaction_code === preselectedCode);
+          const match = res.data.find((t) => t.transaction_code === preselectedCode);
           if (match) {
             handleSelectTransaction(match);
           }
         }
+      } else {
+        setTransactions([]);
+        Alert.alert('Error', res.error || 'Failed to fetch active transactions.');
       }
     } catch (err: any) {
       Alert.alert('Error', err?.message || 'Failed to fetch transactions.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [handleSelectTransaction, preselectedCode]);
 
-  const handleSelectTransaction = (tx: TransactionSummary) => {
-    setSelectedTxCode(tx.transaction_code);
-    // Select all unreturned items by default
-    const activeIds = new Set(
-      tx.items.filter((i) => i.status !== 'returned').map((i) => i.id)
-    );
-    setSelectedItemIds(activeIds);
-  };
+  useEffect(() => {
+    setDateTimeReturned(formatDateTimeDisplay());
+    fetchActiveTransactions();
+  }, [fetchActiveTransactions]);
 
   const toggleItemCheckbox = (itemId: string) => {
     setSelectedItemIds((prev) => {

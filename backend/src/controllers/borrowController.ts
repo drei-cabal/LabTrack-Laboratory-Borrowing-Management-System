@@ -96,11 +96,14 @@ export function createTransaction(req: Request, res: Response): void {
     if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
       errors.push('At least one equipment item must be selected.');
     } else {
+      if (!Number.isInteger(body.loan_period_days) || body.loan_period_days < 1) {
+        errors.push('Loan period must be at least 1 day.');
+      }
       for (const item of body.items) {
-        if (!item.equipment_id) {
+        if (!item || typeof item.equipment_id !== 'string' || !item.equipment_id.trim()) {
           errors.push('Each selected item must have an equipment_id.');
         }
-        if (!item.quantity || item.quantity < 1) {
+        if (!Number.isInteger(item.quantity) || item.quantity < 1) {
           errors.push('Item quantity must be at least 1.');
         }
       }

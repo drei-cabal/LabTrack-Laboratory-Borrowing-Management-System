@@ -93,14 +93,77 @@ export interface ReturnTransactionPayload {
   return_remarks?: string;
 }
 
-// ─── Users ────────────────────────────────────────────────────────────────────
+// ─── Users & Staff ────────────────────────────────────────────────────────────
+
+export type StaffRole = 'admin' | 'assistant' | 'staff';
 
 export interface UserEntity {
   id: string;
   username: string;
   password_hash: string;
-  role: 'admin' | 'staff';
+  role: StaffRole;
+  full_name?: string;
+  is_active: number;
   created_at: string;
+}
+
+export interface StaffEntity {
+  id: string;
+  username: string;
+  full_name: string;
+  role: StaffRole;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CreateStaffPayload {
+  username: string;
+  full_name: string;
+  password: string;
+  role: StaffRole;
+}
+
+export interface UpdateStaffPayload {
+  username?: string;
+  full_name?: string;
+  password?: string;
+  role?: StaffRole;
+  is_active?: boolean;
+}
+
+
+// ─── Dashboard ─────────────────────────────────────────────────────────────
+
+export interface DashboardStats {
+  total_equipment: number;
+  total_borrowed: number;
+  total_overdue: number;
+}
+
+export interface DashboardOverdueItem {
+  id: string;
+  transaction_code: string;
+  title: string;
+  borrower_name: string;
+  due_date: string;
+  days_late: number;
+  days_late_label: string;
+}
+
+export interface DashboardRecentTransaction {
+  id: string;
+  transaction_code: string;
+  title: string;
+  borrower_name: string;
+  status: BorrowStatus;
+  borrow_date: string;
+  due_date: string;
+}
+
+export interface DashboardData {
+  stats: DashboardStats;
+  overdue_items: DashboardOverdueItem[];
+  recent_transactions: DashboardRecentTransaction[];
 }
 
 // ─── API Response ─────────────────────────────────────────────────────────────
@@ -113,3 +176,4 @@ export interface ApiResponse<T = unknown> {
   errors?: string[];
   statusCode: number;
 }
+

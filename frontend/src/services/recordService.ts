@@ -3,13 +3,14 @@ import type {
   TransactionSummary,
   ReturnTransactionPayload,
   BorrowRecordWithEquipment,
+  TransactionStatusFilter,
 } from '../types';
 
 export const recordService = {
   /**
    * GET /api/records?status=...&search=...
    */
-  getTransactions(status?: string, search?: string) {
+  getTransactions(status?: TransactionStatusFilter, search?: string) {
     const params = new URLSearchParams();
     if (status && status !== 'all') {
       params.append('status', status);

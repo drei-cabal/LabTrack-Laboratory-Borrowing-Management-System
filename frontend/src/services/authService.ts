@@ -7,9 +7,13 @@ export interface LoginPayload {
 }
 
 export interface AuthUser {
+  id?: string;
   username: string;
   role: string;
+  full_name?: string;
+  is_active?: boolean;
 }
+
 
 export interface LoginResponse {
   token: string;

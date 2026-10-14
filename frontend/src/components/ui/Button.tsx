@@ -13,7 +13,7 @@ import { AppColors } from '../../constants/colors';
 export interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger-outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger-outline' | 'danger' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   disabled?: boolean;
@@ -55,11 +55,17 @@ export function Button({
         list.push(styles.outline);
         if (pressed) list.push(styles.pressedOutline);
         break;
+      case 'danger':
+        list.push(styles.danger);
+        if (pressed) list.push(styles.pressedDanger);
+        break;
+      case 'destructive':
       case 'danger-outline':
         list.push(styles.dangerOutline);
         if (pressed) list.push(styles.pressedDangerOutline);
         break;
     }
+
 
     if (disabled) list.push(styles.disabled);
     if (style) list.push(style);
@@ -83,10 +89,16 @@ export function Button({
       case 'outline':
         list.push(styles.outlineText);
         break;
+      case 'danger':
+        list.push(styles.dangerText);
+        break;
+      case 'destructive':
       case 'danger-outline':
         list.push(styles.dangerOutlineText);
         break;
     }
+
+
 
     if (disabled) list.push(styles.disabledText);
     if (textStyle) list.push(textStyle);
@@ -161,10 +173,12 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   secondary: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.25,
+    borderColor: AppColors.navy,
   },
   pressedSecondary: {
-    opacity: 0.8,
+    backgroundColor: '#F4F5F7',
   },
   outline: {
     backgroundColor: 'transparent',
@@ -172,16 +186,23 @@ const styles = StyleSheet.create({
     borderColor: AppColors.navy,
   },
   pressedOutline: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F4F5F7',
+  },
+  danger: {
+    backgroundColor: '#DC2626',
+  },
+  pressedDanger: {
+    opacity: 0.85,
   },
   dangerOutline: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1.25,
-    borderColor: '#EF4444',
+    borderColor: '#DC2626',
   },
   pressedDangerOutline: {
     backgroundColor: '#FEF2F2',
   },
+
   disabled: {
     opacity: 0.5,
   },
@@ -204,10 +225,14 @@ const styles = StyleSheet.create({
   outlineText: {
     color: AppColors.navy,
   },
+  dangerText: {
+    color: AppColors.white,
+  },
   dangerOutlineText: {
     color: '#DC2626',
   },
   disabledText: {
     color: AppColors.textMuted,
   },
+
 });

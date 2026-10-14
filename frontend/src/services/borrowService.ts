@@ -2,6 +2,9 @@ import { api } from './api';
 import type {
   BorrowRecordWithEquipment,
   CreateBorrowTransactionPayload,
+  ReturnTransactionPayload,
+  TransactionSummary,
+  TransactionStatusFilter,
 } from '../types';
 
 export const borrowService = {
@@ -30,16 +33,19 @@ export const borrowService = {
   },
 
   /** GET /api/borrow/transactions */
-  getTransactions(status?: string, search?: string) {
+  getTransactions(status?: TransactionStatusFilter, search?: string) {
     const params = new URLSearchParams();
     if (status && status !== 'all') params.append('status', status);
     if (search && search.trim()) params.append('search', search.trim());
     const qs = params.toString() ? `?${params.toString()}` : '';
-    return api.get<any[]>(`/borrow/transactions${qs}`);
+    return api.get<TransactionSummary[]>(`/borrow/transactions${qs}`);
   },
 
   /** POST /api/borrow/return */
-  processReturn(payload: any) {
-    return api.post<any>('/borrow/return', payload);
+  processReturn(payload: ReturnTransactionPayload) {
+    return api.post<{
+      returned_records: BorrowRecordWithEquipment[];
+      transaction: TransactionSummary | null;
+    }>('/borrow/return', payload);
   },
 };

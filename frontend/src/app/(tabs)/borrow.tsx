@@ -19,6 +19,7 @@ import { useBorrowRecords } from '../../hooks/useBorrowRecords';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
+import { Fab } from '../../components/ui/Fab';
 import { ROUTES } from '../../routing/routes';
 import { BorrowRecordWithEquipment } from '../../types';
 import { useGuardedPress } from '../../utils/guards';
@@ -198,16 +199,11 @@ export default function BorrowScreen() {
         />
       )}
 
-      {/* Floating Action Button */}
-      <Pressable
+      <Fab
+        icon="add"
+        label="New Transaction"
         onPress={handleNewTransaction}
-        style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
-        accessibilityRole="button"
-        accessibilityLabel="New Transaction"
-      >
-        <Ionicons name="add" size={20} color="#FFFFFF" />
-        <Text style={styles.fabText}>New Transaction</Text>
-      </Pressable>
+      />
     </SafeAreaView>
   );
 }
@@ -381,32 +377,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: AppColors.navy,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    backgroundColor: AppColors.navy,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-    gap: 6,
-  },
-  fabPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.98 }],
-  },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
   },
 });
