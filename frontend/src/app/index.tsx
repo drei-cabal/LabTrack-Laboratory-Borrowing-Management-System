@@ -59,6 +59,13 @@ export default function LoginScreen() {
       }
 
       router.replace(ROUTES.HOME as any);
+    } catch (error: unknown) {
+      setHasError(true);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'Unable to sign in. Please check the backend connection and try again.'
+      );
     } finally {
       setLoggingIn(false);
     }
