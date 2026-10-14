@@ -67,6 +67,11 @@ export default function NewBorrowTransactionScreen() {
   const [borrowerName, setBorrowerName] = useState('');
   const [borrowerId, setBorrowerId] = useState('');
   const [department, setDepartment] = useState('');
+  const [course, setCourse] = useState('');
+  const [subject, setSubject] = useState('');
+  const [subjectCode, setSubjectCode] = useState('');
+  const [teacherName, setTeacherName] = useState('');
+  const [scheduleDate, setScheduleDate] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [purpose, setPurpose] = useState('');
   const [errorsStep1, setErrorsStep1] = useState<Record<string, string>>({});
@@ -298,10 +303,15 @@ export default function NewBorrowTransactionScreen() {
         quantity: s.quantity,
       }));
 
-      // Assemble structured notes
+      // Assemble structured notes matching the physical Borrower's Slip fields
       const notesParts: string[] = [];
       if (borrowerRole) notesParts.push(`Role: ${borrowerRole}`);
-      if (department.trim()) notesParts.push(`Dept: ${department.trim()}`);
+      if (department.trim()) notesParts.push(`College/Office: ${department.trim()}`);
+      if (course.trim()) notesParts.push(`Course: ${course.trim()}`);
+      if (subject.trim()) notesParts.push(`Subject: ${subject.trim()}`);
+      if (subjectCode.trim()) notesParts.push(`Code: ${subjectCode.trim()}`);
+      if (teacherName.trim()) notesParts.push(`Teacher: ${teacherName.trim()}`);
+      if (scheduleDate.trim()) notesParts.push(`Schedule: ${scheduleDate.trim()}`);
       if (contactNumber.trim()) notesParts.push(`Contact: ${contactNumber.trim()}`);
       if (handlingNotes.trim()) notesParts.push(`Condition Notes: ${handlingNotes.trim()}`);
       if (approvalNotes.trim()) notesParts.push(`Approval Notes: ${approvalNotes.trim()}`);
@@ -363,6 +373,11 @@ export default function NewBorrowTransactionScreen() {
     setBorrowerName('');
     setBorrowerId('');
     setDepartment('');
+    setCourse('');
+    setSubject('');
+    setSubjectCode('');
+    setTeacherName('');
+    setScheduleDate('');
     setContactNumber('');
     setPurpose('');
     setSelectedItems(new Map());
@@ -467,8 +482,8 @@ export default function NewBorrowTransactionScreen() {
               />
 
               <Input
-                label="Department / College / Course"
-                placeholder="e.g. Electrical & Electronics Engineering"
+                label="College / Office / Department"
+                placeholder="e.g. College of Engineering"
                 value={department}
                 onChangeText={setDepartment}
               />
@@ -481,8 +496,61 @@ export default function NewBorrowTransactionScreen() {
                 onChangeText={setContactNumber}
               />
 
+              {/* ── Academic / Course Information ─────────────────────────── */}
+              <View style={styles.sectionHeaderBox}>
+                <Ionicons name="school-outline" size={20} color={AppColors.navy} />
+                <Text style={styles.sectionHeading}>Academic / Course Information</Text>
+              </View>
+
               <Input
-                label="Purpose of Borrowing *"
+                label="Course"
+                placeholder="e.g. BS Electrical Engineering"
+                value={course}
+                onChangeText={setCourse}
+              />
+
+              {/* Subject name + code on same row */}
+              <View style={styles.rowFields}>
+                <View style={styles.rowFieldFlex}>
+                  <Input
+                    label="Subject"
+                    placeholder="e.g. Circuit Analysis"
+                    value={subject}
+                    onChangeText={setSubject}
+                  />
+                </View>
+                <View style={styles.rowFieldShort}>
+                  <Input
+                    label="Subject Code"
+                    placeholder="e.g. EE201"
+                    value={subjectCode}
+                    onChangeText={setSubjectCode}
+                  />
+                </View>
+              </View>
+
+              <Input
+                label="Name of Teacher / Supervisor"
+                placeholder="e.g. Prof. Maria Santos"
+                value={teacherName}
+                onChangeText={setTeacherName}
+              />
+
+              <Input
+                label="Schedule / Date of Use"
+                placeholder="e.g. Oct 16, 2026  8:00 AM – 12:00 PM"
+                value={scheduleDate}
+                onChangeText={setScheduleDate}
+              />
+
+              {/* ── Purpose ───────────────────────────────────────────────── */}
+              <View style={styles.sectionHeaderBox}>
+                <Ionicons name="document-text-outline" size={20} color={AppColors.navy} />
+                <Text style={styles.sectionHeading}>Purpose of Borrowing</Text>
+              </View>
+
+              <Input
+                label="Purpose *"
                 placeholder="e.g. EE201 Lab Experiment 4 — RLC Circuits & Signal Analysis"
                 value={purpose}
                 onChangeText={(val) => {
@@ -2004,5 +2072,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: AppColors.navy,
+  },
+  // ─── Row layout for side-by-side fields ─────────────────────────────────────
+  rowFields: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  rowFieldFlex: {
+    flex: 2,
+  },
+  rowFieldShort: {
+    flex: 1,
   },
 });
