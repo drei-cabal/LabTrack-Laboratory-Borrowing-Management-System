@@ -1,1 +1,38 @@
+# Dependencies
+node_modules/
+package-lock.json.bak
+
+# Expo & React Native
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.tsbuildinfo
+
+# SQLite Database & Storage
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+backend/labtrack.db
+
+# Logs & Debugging
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# GitHub Copilot / Editor caches
 .github/copilot-instructions.md
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
