@@ -1,0 +1,75 @@
+# Repo-local tooling
+.github/copilot-instructions.md
+.kilo/
+.claude/
+
+# Dependencies
+node_modules/
+package-lock.json.bak
+.pnp
+.pnp.js
+.yarn/
+
+# Expo / React Native build output
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Generated native projects (Continuous Native Generation)
+/ios/
+/android/
+.kotlin/
+ios/
+android/
+
+# Native signing & secrets
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Metro bundler
+.metro-health-check*
+metro-cache/
+
+# TypeScript
+*.tsbuildinfo
+
+# SQLite Database & Storage
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+backend/labtrack.db
+
+# Debug & tool logs
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+pnpm-debug.*
+lerna-debug.*
+
+# Local env files (never commit secrets)
+.env
+.env.*
+!.env.example
+.env*.local
+
+# Testing / coverage
+coverage/
+.nyc_output/
+
+# Editor & OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+*.orig.*
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
