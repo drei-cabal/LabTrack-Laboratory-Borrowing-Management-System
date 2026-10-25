@@ -45,6 +45,7 @@ export function QuantityStepper({
           ]}
           accessibilityRole="button"
           accessibilityLabel="Decrease quantity"
+          accessibilityState={{ disabled: value <= min }}
         >
           <Text style={[styles.stepBtnMinusText, value <= min && styles.stepBtnTextDisabled]}>
             -
@@ -66,6 +67,7 @@ export function QuantityStepper({
           ]}
           accessibilityRole="button"
           accessibilityLabel="Increase quantity"
+          accessibilityState={{ disabled: value >= max }}
         >
           <Text style={styles.stepBtnPlusText}>+</Text>
         </Pressable>
@@ -91,8 +93,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   stepBtn: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -134,6 +136,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   valueText: {
+    fontVariant: ['tabular-nums'],
     fontFamily: AppTypography.fontFamily,
     fontSize: AppTypography.size.quantity,
     fontWeight: AppTypography.weight.semibold,
