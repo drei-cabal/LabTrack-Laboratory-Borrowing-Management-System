@@ -33,6 +33,13 @@ export default function LoginScreen() {
   const [errorMessage, setErrorMessage] = useState('Incorrect username or password.');
   const [loggingIn, setLoggingIn] = useState(false);
 
+  // Auto-redirect to home if already authenticated
+  React.useEffect(() => {
+    authService.getCurrentUser().then((user) => {
+      if (user) router.replace(ROUTES.HOME as any);
+    });
+  }, []);
+
   const handleLogin = async () => {
     try {
       setLoggingIn(true);
@@ -156,7 +163,7 @@ export default function LoginScreen() {
 
           {/* Offline version label */}
           <View style={styles.footer}>
-            <Text style={styles.versionText}>v1.0.0 · Offline</Text>
+            <Text style={styles.versionText}>v1.0.0 · UMTC Engineering Lab</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

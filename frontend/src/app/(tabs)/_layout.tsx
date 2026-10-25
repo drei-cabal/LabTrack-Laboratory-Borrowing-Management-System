@@ -1,6 +1,6 @@
 import { AppTypography } from '../../constants/typography';
 import React from 'react';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import { AppColors } from '../../constants/colors';
 import { tokenStore } from '../../services/tokenStore';
 
 export default function TabLayout() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const isIos = Platform.OS === 'ios';
   const bottomInset = insets.bottom;
@@ -19,6 +20,8 @@ export default function TabLayout() {
     tokenStore.getUser().then((user) => {
       if (user) {
         setIsAdmin(user.role === 'admin');
+      } else {
+        router.replace('/' as any);
       }
     });
   }, []);

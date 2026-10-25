@@ -8,7 +8,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -19,9 +18,8 @@ import { FilterChips, type FilterOption } from '../../components/ui/FilterChips'
 import { EmptyState } from '../../components/ui/EmptyState';
 import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { Fab } from '../../components/ui/Fab';
-import { ScreenHeader, ScreenHeaderIconAction } from '../../components/ui/ScreenHeader';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { ROUTES } from '../../routing/routes';
-import { authService } from '../../services/authService';
 
 const FILTER_OPTIONS: readonly { key: FilterOption; label: string }[] = [
   { key: 'All', label: 'All' },
@@ -50,20 +48,6 @@ export default function EquipmentScreen() {
     router.push(ROUTES.EQUIPMENT_DETAIL(id) as any);
   };
 
-  const handleLogout = () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out of LabTrack?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log Out',
-        style: 'destructive',
-        onPress: async () => {
-          await authService.logout();
-          router.replace(ROUTES.LOGIN as any);
-        },
-      },
-    ]);
-  };
-
   return (
     <TabPageLayout
       backgroundColor={AppColors.white}
@@ -71,7 +55,6 @@ export default function EquipmentScreen() {
         <ScreenHeader
           variant="tab"
           title="Equipment"
-          right={<ScreenHeaderIconAction icon="log-out-outline" label="Log out" onPress={handleLogout} />}
         />
       }
       floatingAction={

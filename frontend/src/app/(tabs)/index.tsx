@@ -9,7 +9,9 @@ import {
   RefreshControl,
   ActivityIndicator,
   Platform,
+  Alert,
 } from 'react-native';
+import { authService } from '../../services/authService';
 import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -91,6 +93,33 @@ export default function HomeScreen() {
   const overdueItems = data?.overdue_items ?? [];
   const recentTransactions = data?.recent_transactions ?? [];
 
+  const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to log out of LabTrack?')) {
+        authService.logout().then(() => {
+          window.location.href = '/';
+        });
+      }
+    } else {
+      Alert.alert(
+        'Log Out',
+        'Are you sure you want to log out of LabTrack?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Log Out',
+            style: 'destructive',
+            onPress: async () => {
+              await authService.logout();
+              router.replace(ROUTES.LOGIN as any);
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+    }
+  };
+
   return (
     <TabPageLayout
       header={
@@ -109,7 +138,17 @@ export default function HomeScreen() {
             <Text style={styles.welcomeLabel}>WELCOME BACK</Text>
             <Text style={styles.welcomeName} numberOfLines={1}>{welcomeName}</Text>
           </View>
-          <RoleBadge role={isAdmin ? 'admin' : 'assistant'} />
+          <View style={styles.headerRight}>
+            <RoleBadge role={isAdmin ? 'admin' : 'assistant'} />
+            <Pressable
+              onPress={handleLogout}
+              style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Log out"
+            >
+              <Ionicons name="log-out-outline" size={20} color="rgba(255,255,255,0.75)" />
+            </Pressable>
+          </View>
         </View>
       }
       backgroundColor={AppColors.white}
@@ -296,6 +335,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 22,
     backgroundColor: AppColors.navy,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  logoutBtn: {
+    padding: 6,
+    borderRadius: 8,
+  },
+  logoutBtnPressed: {
+    opacity: 0.5,
   },
   welcomeText: { flex: 1, minWidth: 0, marginRight: 12 },
   welcomeLabel: {
