@@ -44,8 +44,8 @@ export function ScreenHeader({ title, onBack, right, variant }: ScreenHeaderProp
   const safeAreaStyle = Platform.OS === 'web'
     ? styles.webSafeArea
     : {
-        minHeight: HEADER.minHeight + Math.max(top, MIN_HEADER_TOP_INSET) + HEADER.topPadding,
-        paddingTop: Math.max(top, MIN_HEADER_TOP_INSET) + HEADER.topPadding,
+        minHeight: HEADER.minHeight + (top > 0 ? top : 0),
+        paddingTop: top > 0 ? top : 0,
       };
 
   const handleBack = () => {
@@ -143,8 +143,9 @@ export function ScreenHeaderTextAction({
 const styles = StyleSheet.create({
   // React Native Web accepts CSS calculations; native uses the measured inset above.
   webSafeArea: {
-    paddingTop: `calc(max(env(safe-area-inset-top, 0px), ${MIN_HEADER_TOP_INSET}px) + ${HEADER.topPadding}px)`,
-    minHeight: `calc(max(env(safe-area-inset-top, 0px), ${MIN_HEADER_TOP_INSET}px) + ${HEADER.minHeight + HEADER.topPadding}px)`,
+    paddingTop: 0,
+    minHeight: HEADER.minHeight,
+    height: HEADER.minHeight,
   } as unknown as ViewStyle,
   header: {
     flexDirection: 'row',

@@ -126,7 +126,7 @@ export default function HomeScreen() {
         <View style={[
           styles.welcomeBanner,
           {
-            paddingTop: Math.max(insets.top, MIN_HEADER_TOP_INSET) + 16,
+            paddingTop: Platform.OS === 'web' ? 16 : (insets.top > 0 ? insets.top + 12 : 16),
             paddingLeft: insets.left + 20,
             paddingRight: insets.right + 20,
             marginLeft: -insets.left,

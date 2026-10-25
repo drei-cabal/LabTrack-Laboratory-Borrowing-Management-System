@@ -182,16 +182,16 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: 36,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'web' ? 24 : 36,
     paddingBottom: 24,
   },
   brandSection: {
     alignItems: 'flex-start',
-    marginBottom: 32,
+    marginBottom: 16,
   },
   brandLogo: {
-    width: 160,
-    height: 160,
+    width: 100,
+    height: 100,
   },
   brandSubtitle: {
     color: '#59708F',
