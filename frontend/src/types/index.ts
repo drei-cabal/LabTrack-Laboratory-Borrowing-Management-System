@@ -1,6 +1,7 @@
 export type EquipmentStatus = 'Available' | 'Partial' | 'Out';
 
 export type BorrowStatus = 'borrowed' | 'overdue' | 'returned';
+export type TransactionStatusFilter = BorrowStatus | 'all' | 'active';
 
 export interface EquipmentEntity {
   id: string;
@@ -97,6 +98,7 @@ export interface StaffEntity {
   id: string;
   username: string;
   full_name: string;
+  email?: string;
   role: StaffRole;
   is_active: boolean;
   created_at: string;
@@ -105,6 +107,7 @@ export interface StaffEntity {
 export interface CreateStaffPayload {
   username: string;
   full_name: string;
+  email?: string;
   password: string;
   role: StaffRole;
 }
@@ -112,6 +115,7 @@ export interface CreateStaffPayload {
 export interface UpdateStaffPayload {
   username?: string;
   full_name?: string;
+  email?: string;
   password?: string;
   role?: StaffRole;
   is_active?: boolean;
@@ -150,5 +154,4 @@ export interface DashboardData {
   overdue_items: DashboardOverdueItem[];
   recent_transactions: DashboardRecentTransaction[];
 }
-
 

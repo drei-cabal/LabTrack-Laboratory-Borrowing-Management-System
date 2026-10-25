@@ -111,6 +111,7 @@ export interface StaffEntity {
   id: string;
   username: string;
   full_name: string;
+  email?: string;
   role: StaffRole;
   is_active: boolean;
   created_at: string;
@@ -119,6 +120,7 @@ export interface StaffEntity {
 export interface CreateStaffPayload {
   username: string;
   full_name: string;
+  email?: string;
   password: string;
   role: StaffRole;
 }
@@ -126,6 +128,7 @@ export interface CreateStaffPayload {
 export interface UpdateStaffPayload {
   username?: string;
   full_name?: string;
+  email?: string;
   password?: string;
   role?: StaffRole;
   is_active?: boolean;

@@ -157,6 +157,7 @@ export function getById(id: string): BorrowRecordWithEquipment | null {
 
 /**
  * Returns all transactions grouped by transaction_code matching Figma Records screen.
+ * The active status filter includes both borrowed and overdue transactions.
  */
 export function getTransactions(statusFilter?: string, search?: string): TransactionSummary[] {
   autoUpdateOverdueStatus();
@@ -226,7 +227,11 @@ export function getTransactions(statusFilter?: string, search?: string): Transac
 
     // Filter by status if requested
     if (statusFilter && statusFilter !== 'all') {
-      if (summary.status !== statusFilter) {
+      const matchesStatus =
+        statusFilter === 'active'
+          ? summary.status === 'borrowed' || summary.status === 'overdue'
+          : summary.status === statusFilter;
+      if (!matchesStatus) {
         continue;
       }
     }
@@ -323,8 +328,17 @@ export function createTransaction(payload: CreateBorrowTransactionPayload): Borr
     dueDateStr = dueDate.toISOString().split('T')[0];
   }
 
-  // 1. Validate that all equipment exists and has sufficient available quantity
+  // 1. Validate that all equipment exists and has sufficient available quantity.
+  // Aggregate duplicate lines so one transaction cannot overbook the same equipment.
+  const requestedByEquipment = new Map<string, number>();
   for (const item of payload.items) {
+    requestedByEquipment.set(
+      item.equipment_id,
+      (requestedByEquipment.get(item.equipment_id) || 0) + item.quantity
+    );
+  }
+
+  for (const [equipmentId, requestedQuantity] of requestedByEquipment) {
     const eqRow = db.prepare<[string], { id: string; name: string; total_quantity: number; borrowed_count: number }>(`
       SELECT
         e.id,
@@ -338,16 +352,16 @@ export function createTransaction(payload: CreateBorrowTransactionPayload): Borr
         ), 0) AS borrowed_count
       FROM equipment e
       WHERE e.id = ?
-    `).get(item.equipment_id);
+    `).get(equipmentId);
 
     if (!eqRow) {
-      throw new Error(`Equipment with id ${item.equipment_id} not found.`);
+      throw new Error(`Equipment with id ${equipmentId} not found.`);
     }
 
     const available = Math.max(0, eqRow.total_quantity - eqRow.borrowed_count);
-    if (item.quantity > available) {
+    if (requestedQuantity > available) {
       throw new Error(
-        `Insufficient quantity for "${eqRow.name}". Requested: ${item.quantity}, Available: ${available}`
+        `Insufficient quantity for "${eqRow.name}". Requested: ${requestedQuantity}, Available: ${available}`
       );
     }
   }

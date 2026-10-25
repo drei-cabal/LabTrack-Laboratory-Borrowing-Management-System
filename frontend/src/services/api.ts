@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '../config/apiConfig';
 import { tokenStore } from './tokenStore';
 
+const REQUEST_TIMEOUT_MS = 10000;
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
@@ -27,13 +29,22 @@ export async function apiRequest<T = unknown>(
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = 'Bearer ' + token;
     }
 
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-      ...options,
-      headers,
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    let response: Response;
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        ...options,
+        headers,
+        signal: options.signal ?? controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     const json = await response.json();
     return json as ApiResponse<T>;
@@ -42,10 +53,11 @@ export async function apiRequest<T = unknown>(
     const isNetworkError =
       rawMessage === 'Failed to fetch' ||
       rawMessage.includes('Network request failed') ||
-      rawMessage.includes('ECONNREFUSED');
+      rawMessage.includes('ECONNREFUSED') ||
+      rawMessage.includes('aborted');
 
     const message = isNetworkError
-      ? 'Cannot connect to backend server. Please make sure the backend is running on port 3001.'
+      ? `Cannot connect to backend server at ${API_BASE_URL}. Make sure the backend is running and the phone is on the same network.`
       : rawMessage;
 
     return {
