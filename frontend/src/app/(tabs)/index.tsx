@@ -26,7 +26,6 @@ import { DashboardOverdueItem, DashboardRecentTransaction } from '../../types';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { Fab } from '../../components/ui/Fab';
-import { MIN_HEADER_TOP_INSET } from '../../components/ui/ScreenHeader';
 
 
 function formatWelcomeName(name?: string, username?: string): string {
@@ -92,6 +91,9 @@ export default function HomeScreen() {
   };
   const overdueItems = data?.overdue_items ?? [];
   const recentTransactions = data?.recent_transactions ?? [];
+  const [sectionsHeight, setSectionsHeight] = React.useState(0);
+  // Keep both sections bounded by the navigator, even when a short screen cannot fit 80px each.
+  const minSectionHeight = sectionsHeight > 0 ? Math.max(0, Math.min(80, (sectionsHeight - 20) / 2)) : 80;
 
   const handleLogout = () => {
     if (Platform.OS === 'web') {
@@ -160,24 +162,13 @@ export default function HomeScreen() {
         />
       }
     >
-      {/* ─── Scrollable Content ─── */}
+      {/* ─── Fixed Content ─── */}
       {loading && !data ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={AppColors.navy} />
         </View>
       ) : (
-        <ScrollView
-          contentContainerStyle={tabPageStyles.listWithoutControls}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={refresh}
-              colors={[AppColors.navy]}
-              tintColor={AppColors.navy}
-            />
-          }
-        >
+        <View style={[tabPageStyles.bodyGutters, styles.dashboardContent]}>
           {/* ─── Stat Cards (3 Columns) ─── */}
           <View style={styles.statsRow}>
             {/* Equipment Card */}
@@ -223,110 +214,169 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          {/* ─── Overdue Items Section ─── */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>OVERDUE ITEMS</Text>
-              <Pressable
-                onPress={handleOverduePress}
-                hitSlop={8}
-                accessibilityRole="button"
-              >
-                <Text style={styles.viewAllText}>View All</Text>
-              </Pressable>
-            </View>
-
-            {overdueItems.length === 0 ? (
-              <EmptyState icon="checkmark-circle-outline" message="No overdue equipment items" style={styles.emptyCard} />
-            ) : (
-              overdueItems.map((item: DashboardOverdueItem) => (
+          <View
+            style={styles.sections}
+            onLayout={({ nativeEvent }) => setSectionsHeight(nativeEvent.layout.height)}
+          >
+            {/* ─── Overdue Items Section ─── */}
+            <View style={[styles.sectionContainer, { minHeight: minSectionHeight }]}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>OVERDUE ITEMS</Text>
                 <Pressable
-                  key={item.id}
-                  onPress={() => handleRecordItemPress(item.transaction_code)}
-                  style={({ pressed }) => [
-                    styles.overdueItemCard,
-                    pressed && styles.cardPressed,
-                  ]}
+                  onPress={handleOverduePress}
+                  hitSlop={8}
                   accessibilityRole="button"
                 >
-                  {/* Left Red Accent Strip */}
-                  <View style={styles.redAccentStrip} />
-
-                  {/* Item & Borrower Details */}
-                  <View style={styles.itemInfo}>
-                    <Text style={styles.itemTitle} numberOfLines={1}>
-                      {item.title}
-                    </Text>
-                    <Text style={styles.itemBorrower} numberOfLines={1}>
-                      {item.borrower_name}
-                    </Text>
-                  </View>
-
-                  {/* Right Days Late & Due Date */}
-                  <View style={styles.itemRight}>
-                    <Text style={styles.daysLateText}>{item.days_late_label}</Text>
-                    <Text style={styles.dueDateText}>Due {item.due_date}</Text>
-                  </View>
+                  <Text style={styles.viewAllText}>View All</Text>
                 </Pressable>
-              ))
-            )}
-          </View>
+              </View>
 
-          {/* ─── Recent Transactions Section ─── */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>RECENT TRANSACTIONS</Text>
-              <Pressable
-                onPress={handleViewAllRecordsPress}
-                hitSlop={8}
-                accessibilityRole="button"
+              <ScrollView
+                style={styles.sectionList}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+                contentContainerStyle={overdueItems.length === 0 ? styles.emptyListContent : styles.listContent}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={refresh}
+                    colors={[AppColors.navy]}
+                    tintColor={AppColors.navy}
+                  />
+                }
               >
-                <Text style={styles.viewAllText}>View All</Text>
-              </Pressable>
+                {overdueItems.length === 0 ? (
+                  <EmptyState icon="checkmark-circle-outline" message="No overdue equipment items" style={styles.emptyCard} />
+                ) : (
+                  overdueItems.map((item: DashboardOverdueItem) => (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => handleRecordItemPress(item.transaction_code)}
+                      style={({ pressed }) => [
+                        styles.overdueItemCard,
+                        pressed && styles.cardPressed,
+                      ]}
+                      accessibilityRole="button"
+                    >
+                      {/* Left Red Accent Strip */}
+                      <View style={styles.redAccentStrip} />
+
+                      {/* Item & Borrower Details */}
+                      <View style={styles.itemInfo}>
+                        <Text style={styles.itemTitle} numberOfLines={1}>
+                          {item.title}
+                        </Text>
+                        <Text style={styles.itemBorrower} numberOfLines={1}>
+                          {item.borrower_name}
+                        </Text>
+                      </View>
+
+                      {/* Right Days Late & Due Date */}
+                      <View style={styles.itemRight}>
+                        <Text style={styles.daysLateText}>{item.days_late_label}</Text>
+                        <Text style={styles.dueDateText}>Due {item.due_date}</Text>
+                      </View>
+                    </Pressable>
+                  ))
+                )}
+              </ScrollView>
             </View>
 
-            {recentTransactions.length === 0 ? (
-              <EmptyState icon="document-text-outline" message="No recent transactions" style={styles.emptyCard} />
-            ) : (
-              recentTransactions.map((tx: DashboardRecentTransaction) => {
-                return (
-                  <Pressable
-                    key={tx.id}
-                    onPress={() => handleRecordItemPress(tx.transaction_code)}
-                    style={({ pressed }) => [
-                      styles.transactionCard,
-                      pressed && styles.cardPressed,
-                    ]}
-                    accessibilityRole="button"
-                  >
-                    {/* Item & Borrower */}
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemTitle} numberOfLines={1}>
-                        {tx.title}
-                      </Text>
-                      <Text style={styles.itemBorrower} numberOfLines={1}>
-                        {tx.borrower_name}
-                      </Text>
-                    </View>
+            {/* ─── Recent Transactions Section ─── */}
+            <View style={[styles.sectionContainer, styles.lastSection, { minHeight: minSectionHeight }]}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>RECENT TRANSACTIONS</Text>
+                <Pressable
+                  onPress={handleViewAllRecordsPress}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.viewAllText}>View All</Text>
+                </Pressable>
+              </View>
 
-                    {/* Status Pill & Date */}
-                    <View style={styles.itemRight}>
-                      <StatusBadge status={tx.status} />
-                      <Text style={styles.dateText}>{tx.borrow_date}</Text>
-                    </View>
-                  </Pressable>
+              <ScrollView
+                style={styles.sectionList}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+                contentContainerStyle={recentTransactions.length === 0 ? styles.emptyListContent : styles.recentListContent}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={refresh}
+                    colors={[AppColors.navy]}
+                    tintColor={AppColors.navy}
+                  />
+                }
+              >
+                {recentTransactions.length === 0 ? (
+                  <EmptyState icon="document-text-outline" message="No recent transactions" style={styles.emptyCard} />
+                ) : (
+                  recentTransactions.map((tx: DashboardRecentTransaction) => {
+                    return (
+                      <Pressable
+                        key={tx.id}
+                        onPress={() => handleRecordItemPress(tx.transaction_code)}
+                        style={({ pressed }) => [
+                          styles.transactionCard,
+                          pressed && styles.cardPressed,
+                        ]}
+                        accessibilityRole="button"
+                      >
+                        {/* Item & Borrower */}
+                        <View style={styles.itemInfo}>
+                          <Text style={styles.itemTitle} numberOfLines={1}>
+                            {tx.title}
+                          </Text>
+                          <Text style={styles.itemBorrower} numberOfLines={1}>
+                            {tx.borrower_name}
+                          </Text>
+                        </View>
 
-                );
-              })
-            )}
+                        {/* Status Pill & Date */}
+                        <View style={styles.itemRight}>
+                          <StatusBadge status={tx.status} />
+                          <Text style={styles.dateText}>{tx.borrow_date}</Text>
+                        </View>
+                      </Pressable>
+
+                    );
+                  })
+                )}
+              </ScrollView>
+            </View>
           </View>
-        </ScrollView>
+        </View>
       )}
     </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  dashboardContent: {
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  sections: {
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  sectionList: {
+    flex: 1,
+    minHeight: 0,
+  },
+  listContent: {
+    paddingBottom: 16,
+  },
+  recentListContent: {
+    paddingBottom: 90,
+  },
+  emptyListContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   welcomeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -364,6 +414,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   statsRow: {
+    flexShrink: 0,
     flexDirection: 'row',
     gap: 10,
     marginBottom: 24,
@@ -425,9 +476,16 @@ const styles = StyleSheet.create({
     color: AppColors.textSecondary,
   },
   sectionContainer: {
+    flex: 1,
+    minHeight: 80,
+    overflow: 'hidden',
     marginBottom: 20,
   },
+  lastSection: {
+    marginBottom: 0,
+  },
   sectionHeader: {
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
