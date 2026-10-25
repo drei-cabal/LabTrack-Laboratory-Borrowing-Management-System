@@ -16,7 +16,7 @@ export function ProgressBar({ available, total }: ProgressBarProps) {
       <View style={styles.barTrack}>
         <View style={[styles.barFill, { width: `${percentage}%` }]} />
       </View>
-      <Text style={styles.label}>
+      <Text style={styles.label} accessibilityLabel={`${available} of ${total} available`}>
         {available}/{total} avail.
       </Text>
     </View>
@@ -42,8 +42,11 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   label: {
+    flexShrink: 0,
+    fontVariant: ['tabular-nums'],
     fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.chip,
+    fontSize: AppTypography.size.small,
+    lineHeight: AppTypography.lineHeight.small,
     color: AppColors.textSecondary,
     fontWeight: AppTypography.weight.medium,
   },
