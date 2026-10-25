@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { AppColors } from '../../constants/colors';
@@ -21,13 +22,13 @@ export function StepIndicator({
       <View style={styles.barsRow}>
         <View style={styles.barsContainer}>
           {steps.map((step) => {
-            const isActive = step <= currentStep;
+            const isActive = step === currentStep;
             return (
               <View
                 key={step}
                 style={[
                   styles.bar,
-                  isActive ? styles.barActive : styles.barInactive,
+                  isActive ? styles.barActive : step < currentStep ? styles.barCompleted : styles.barInactive,
                 ]}
               />
             );
@@ -49,39 +50,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    backgroundColor: '#FFFFFF',
+    borderBottomColor: AppColors.background,
+    backgroundColor: AppColors.white,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
+    flexShrink: 1,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.section,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
   },
   barsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   barsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 8,
   },
   bar: {
-    width: 18,
-    height: 4,
-    borderRadius: 2,
+    width: 16,
+    height: 6,
+    borderRadius: 3,
   },
   barActive: {
+    width: 32,
     backgroundColor: AppColors.navy,
   },
   barInactive: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
+  },
+  barCompleted: {
+    backgroundColor: AppColors.textMuted,
   },
   stepText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: AppColors.textMuted,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.regular,
+    color: AppColors.textSecondary,
     minWidth: 24,
     textAlign: 'right',
   },

@@ -1,30 +1,38 @@
+import { AppTypography } from '../../constants/typography';
 import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  Pressable,
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { AppColors } from '../../constants/colors';
+import { Button } from '../../components/ui/Button';
 import { useBorrowRecords } from '../../hooks/useBorrowRecords';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { Button } from '../../components/ui/Button';
+import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
+import { FilterChips } from '../../components/ui/FilterChips';
 import { Fab } from '../../components/ui/Fab';
+import { ScreenHeader, ScreenHeaderTextAction } from '../../components/ui/ScreenHeader';
 import { ROUTES } from '../../routing/routes';
 import { BorrowRecordWithEquipment } from '../../types';
 import { useGuardedPress } from '../../utils/guards';
 
 type FilterTab = 'all' | 'borrowed' | 'overdue' | 'returned';
+
+const FILTER_OPTIONS: readonly { key: FilterTab; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'borrowed', label: 'Borrowed' },
+  { key: 'overdue', label: 'Overdue' },
+  { key: 'returned', label: 'Returned' },
+];
 
 export default function BorrowScreen() {
   const router = useRouter();
@@ -115,21 +123,15 @@ export default function BorrowScreen() {
           </View>
 
           {!isReturned && (
-            <Pressable
+            <Button
+              title="Return"
+              variant="secondary"
+              size="sm"
+              fullWidth={false}
               onPress={() => handleReturnPress(item)}
               disabled={returningId === item.id}
-              style={({ pressed }) => [
-                styles.returnBtn,
-                pressed && styles.returnBtnPressed,
-                returningId === item.id && styles.returnBtnDisabled,
-              ]}
-            >
-              {returningId === item.id ? (
-                <ActivityIndicator size="small" color={AppColors.navy} />
-              ) : (
-                <Text style={styles.returnBtnText}>Return</Text>
-              )}
-            </Pressable>
+              loading={returningId === item.id}
+            />
           )}
         </View>
       </View>
@@ -137,43 +139,33 @@ export default function BorrowScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Top Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Borrowing</Text>
-          <Text style={styles.headerSubtitle}>Transactions & Active Loans</Text>
-        </View>
-
-        <Pressable
+    <TabPageLayout
+      backgroundColor={AppColors.white}
+      header={
+        <ScreenHeader
+          variant="tab"
+          title="Borrowing"
+          right={
+            <ScreenHeaderTextAction
+              icon="add"
+              label="New Loan"
+              accessibilityLabel="New Transaction"
+              onPress={handleNewTransaction}
+            />
+          }
+        />
+      }
+      floatingAction={
+        <Fab
+          icon="add"
+          label="New Transaction"
           onPress={handleNewTransaction}
-          style={({ pressed }) => [styles.headerAddBtn, pressed && styles.btnPressed]}
-          accessibilityRole="button"
-          accessibilityLabel="New Transaction"
-        >
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.headerAddText}>New Loan</Text>
-        </Pressable>
-      </View>
-
+        />
+      }
+    >
       {/* Filter Tabs */}
-      <View style={styles.tabContainer}>
-        {(['all', 'borrowed', 'overdue', 'returned'] as FilterTab[]).map((tab) => {
-          const isActive = filter === tab;
-          const label = tab.charAt(0).toUpperCase() + tab.slice(1);
-          return (
-            <Pressable
-              key={tab}
-              onPress={() => setFilter(tab)}
-              style={[styles.tabButton, isActive && styles.tabButtonActive]}
-            >
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-                {label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Text style={styles.subtitle}>Transactions & Active Loans</Text>
+      <FilterChips options={FILTER_OPTIONS} selected={filter} onSelect={setFilter} />
 
       {/* List Content */}
       {loading && records.length === 0 ? (
@@ -191,85 +183,24 @@ export default function BorrowScreen() {
           data={records}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[tabPageStyles.listAfterFilters, styles.listContent]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={AppColors.navy} />
           }
         />
       )}
-
-      <Fab
-        icon="add"
-        label="New Transaction"
-        onPress={handleNewTransaction}
-      />
-    </SafeAreaView>
+    </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 14,
-  },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: AppColors.text,
-  },
-  headerSubtitle: {
-    fontSize: 12,
+  subtitle: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
-    marginTop: 2,
-  },
-  headerAddBtn: {
-    backgroundColor: AppColors.navy,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  btnPressed: {
-    opacity: 0.85,
-  },
-  headerAddText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 14,
-    gap: 8,
-  },
-  tabButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-  },
-  tabButtonActive: {
-    backgroundColor: AppColors.navy,
-  },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: AppColors.textSecondary,
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
   },
   centerContainer: {
     flex: 1,
@@ -277,15 +208,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
     gap: 12,
   },
   card: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 14,
     gap: 10,
   },
@@ -298,15 +227,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   borrowerName: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.bodyStrong,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
   },
   borrowerId: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
     marginTop: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   equipmentRow: {
     flexDirection: 'row',
@@ -315,32 +245,35 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   equipmentName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
   },
   tagBadge: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
   },
   tagText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
   },
   purposeText: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
-    lineHeight: 16,
+    lineHeight: AppTypography.lineHeight.small,
   },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    borderTopColor: AppColors.border,
     paddingTop: 10,
     marginTop: 2,
   },
@@ -348,34 +281,16 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   dateLabel: {
-    fontSize: 11,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
     color: AppColors.textSecondary,
   },
   dateValue: {
-    fontWeight: '600',
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
   },
   dueDateValue: {
-    fontWeight: '700',
-    color: AppColors.navy,
-  },
-  returnBtn: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: AppColors.navy,
-    borderRadius: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-  },
-  returnBtnPressed: {
-    backgroundColor: '#F1F5F9',
-  },
-  returnBtnDisabled: {
-    opacity: 0.6,
-  },
-  returnBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
   },
 });

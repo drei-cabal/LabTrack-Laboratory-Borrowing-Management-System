@@ -7,6 +7,10 @@ export const AppColors = {
   cardBackground: '#FFFFFF',
   border: '#E0E2E7',
   borderDark: '#CBD5E1',
+  headerBorder: '#F1F5F9',
+  headerActionBackground: '#F8FAFC',
+  headerActionBorder: '#E2E8F0',
+  headerBannerLabel: '#94A3B8',
   text: '#1A1A1A',
   textSecondary: '#6B7280',
   textMuted: '#9CA3AF',
@@ -35,7 +39,7 @@ export const AppColors = {
   returnedBg: '#F0FDF4',
   active: '#16A34A',
   activeBg: '#F0FDF4',
-  inactive: '#6B7280',
+  inactive: '#9CA3AF',
   inactiveBg: '#F4F5F7',
 };
 

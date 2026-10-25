@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { AppColors } from '../../constants/colors';
@@ -35,10 +36,10 @@ export function StatsSummary({ total, borrowed, available }: StatsSummaryProps) 
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingVertical: 14,
     paddingHorizontal: 8,
     flexDirection: 'row',
@@ -51,8 +52,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.display,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
     marginBottom: 2,
   },
@@ -63,13 +65,14 @@ const styles = StyleSheet.create({
     color: AppColors.available,
   },
   statLabel: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
-    fontWeight: '500',
+    fontWeight: AppTypography.weight.medium,
   },
   statDivider: {
     width: 1,
     height: 28,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
   },
 });

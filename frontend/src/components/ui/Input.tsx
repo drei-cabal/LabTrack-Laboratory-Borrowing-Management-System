@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
   View,
@@ -53,15 +54,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
     marginBottom: 8,
   },
   inputWrapper: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     borderRadius: 8,
     minHeight: 46,
     justifyContent: 'center',
@@ -73,7 +75,8 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   input: {
-    fontSize: 14,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
     color: AppColors.text,
     padding: 0,
   },
@@ -81,11 +84,12 @@ const styles = StyleSheet.create({
     minHeight: 86,
   },
   inputError: {
-    borderColor: '#EF4444',
+    borderColor: AppColors.red,
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 12,
+    color: AppColors.red,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     marginTop: 4,
   },
 });

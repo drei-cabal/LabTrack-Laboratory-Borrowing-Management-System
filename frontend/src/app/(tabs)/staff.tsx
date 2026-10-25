@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
   View,
@@ -9,24 +10,25 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStaff } from '../../hooks/useStaff';
 import { AppColors } from '../../constants/colors';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { ROUTES } from '../../routing/routes';
 import { getInitials, formatUsername } from '../../utils/staffUtils';
 import { StaffEntity } from '../../types';
 import { useGuardedPress } from '../../utils/guards';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { RoleBadge } from '../../components/ui/RoleBadge';
+import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { Fab } from '../../components/ui/Fab';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 
 export default function StaffScreen() {
 
 
   const router = useRouter();
-  const { staff, loading, refreshing, refresh, error } = useStaff();
+  const { staff, loading, refreshing, refresh } = useStaff();
 
   const handleAddPress = useGuardedPress(() => {
     router.push(ROUTES.STAFF_ADD as any);
@@ -38,7 +40,6 @@ export default function StaffScreen() {
 
   const renderStaffItem = ({ item }: { item: StaffEntity }) => {
     const initials = getInitials(item.full_name);
-    const isAdmin = item.role === 'admin';
     const isInactive = !item.is_active;
 
     return (
@@ -81,32 +82,28 @@ export default function StaffScreen() {
     if (loading) return null;
 
     return (
-      <View style={styles.emptyContainer}>
-        <View style={styles.emptyIconCircle}>
-          <Ionicons name="person-outline" size={32} color="#94A3B8" />
-        </View>
-        <Text style={styles.emptyTitle}>No staff accounts yet.</Text>
-        <Text style={styles.emptySubtitle}>
-          Add the first team member to grant lab access.
-        </Text>
-        <Pressable
-          onPress={handleAddPress}
-          style={({ pressed }) => [styles.emptyAddBtn, pressed && styles.emptyAddBtnPressed]}
-          accessibilityRole="button"
-        >
-          <Text style={styles.emptyAddBtnText}>Add Staff</Text>
-        </Pressable>
-      </View>
+      <EmptyState
+        icon="person-outline"
+        title="No staff accounts yet."
+        message="Add the first team member to grant lab access."
+        actionText="Add Staff"
+        onAction={handleAddPress}
+      />
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      {/* Top Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Manage Staff</Text>
-      </View>
-
+    <TabPageLayout
+      backgroundColor={AppColors.white}
+      header={<ScreenHeader variant="tab" title="Manage Staff" />}
+      floatingAction={
+        <Fab
+          icon="add"
+          label="Add Staff"
+          onPress={handleAddPress}
+        />
+      }
+    >
       {/* Main Content */}
       {loading && staff.length === 0 ? (
         <View style={styles.loadingContainer}>
@@ -118,7 +115,7 @@ export default function StaffScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderStaffItem}
           contentContainerStyle={[
-            styles.listContent,
+            tabPageStyles.listWithoutControls,
             staff.length === 0 && styles.listContentEmpty,
           ]}
           ListEmptyComponent={renderEmptyState}
@@ -133,43 +130,15 @@ export default function StaffScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      <Fab
-        icon="add"
-        label="Add Staff"
-        onPress={handleAddPress}
-      />
-    </SafeAreaView>
+    </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: AppColors.navy,
-    letterSpacing: -0.3,
-  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 90, // Leave room for FAB and tab bar
   },
   listContentEmpty: {
     flexGrow: 1,
@@ -178,13 +147,13 @@ const styles = StyleSheet.create({
   staffCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -198,12 +167,12 @@ const styles = StyleSheet.create({
     }),
   },
   staffCardPressed: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderColor: '#CBD5E1',
   },
   staffCardInactive: {
     backgroundColor: '#FAFAFA',
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     opacity: 0.9,
   },
   avatar: {
@@ -216,12 +185,13 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   avatarInactive: {
-    backgroundColor: '#475569',
+    backgroundColor: AppColors.textSecondary,
   },
   avatarText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
+    color: AppColors.white,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.bodyStrong,
+    fontWeight: AppTypography.weight.bold,
     letterSpacing: 0.5,
   },
   staffDetails: {
@@ -230,113 +200,23 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   staffName: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.bodyStrong,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
     marginBottom: 3,
   },
   staffNameInactive: {
-    color: '#475569',
+    color: AppColors.textSecondary,
   },
   staffUsername: {
-    fontSize: 13,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.textSecondary,
   },
   badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-  },
-  inactivePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  inactiveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#94A3B8',
-  },
-  inactiveText: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '600',
-  },
-  adminBadge: {
-    backgroundColor: AppColors.navy,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  adminBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  assistantBadge: {
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  assistantBadgeText: {
-    color: '#64748B',
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 48,
-  },
-  emptyIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    backgroundColor: '#F8FAFC',
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: AppColors.navy,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  emptyAddBtn: {
-    borderWidth: 1.5,
-    borderColor: AppColors.navy,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  emptyAddBtnPressed: {
-    backgroundColor: '#F1F5F9',
-  },
-  emptyAddBtnText: {
-    color: AppColors.navy,
-    fontSize: 14,
-    fontWeight: '600',
   },
 });

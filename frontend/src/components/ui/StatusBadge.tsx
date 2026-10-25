@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { AppColors } from '../../constants/colors';
@@ -75,7 +76,6 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       break;
   }
 
-
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
       <View style={[styles.dot, { backgroundColor: dotColor }]} />
@@ -89,18 +89,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingVertical: 5,
+    borderRadius: 3,
     alignSelf: 'flex-start',
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    marginRight: 5,
+    marginRight: 4,
   },
   text: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.semibold,
+    lineHeight: AppTypography.lineHeight.chip,
+    letterSpacing: 0.3,
   },
 });

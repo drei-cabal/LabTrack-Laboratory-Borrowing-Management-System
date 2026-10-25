@@ -1,7 +1,7 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TextInput,
   FlatList,
@@ -10,17 +10,25 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEquipment } from '../../hooks/useEquipment';
 import { AppColors } from '../../constants/colors';
 import { EquipmentCard } from '../../components/equipment/EquipmentCard';
-import { FilterChips } from '../../components/ui/FilterChips';
+import { FilterChips, type FilterOption } from '../../components/ui/FilterChips';
 import { EmptyState } from '../../components/ui/EmptyState';
+import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { Fab } from '../../components/ui/Fab';
+import { ScreenHeader, ScreenHeaderIconAction } from '../../components/ui/ScreenHeader';
 import { ROUTES } from '../../routing/routes';
 import { authService } from '../../services/authService';
+
+const FILTER_OPTIONS: readonly { key: FilterOption; label: string }[] = [
+  { key: 'All', label: 'All' },
+  { key: 'Available', label: 'Available' },
+  { key: 'Partial', label: 'Partial' },
+  { key: 'Out', label: 'Out' },
+];
 
 export default function EquipmentScreen() {
   const router = useRouter();
@@ -56,160 +64,95 @@ export default function EquipmentScreen() {
     ]);
   };
 
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
-        {/* Top Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Equipment</Text>
-          <View style={styles.headerActions}>
-            <Pressable
-              onPress={handleLogout}
-              style={({ pressed }) => [styles.headerIconBtn, pressed && styles.iconPressed]}
-              accessibilityRole="button"
-              accessibilityLabel="Log out"
-            >
-              <Ionicons name="log-out-outline" size={19} color={AppColors.navy} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Search Input Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={18}
-            color={AppColors.textMuted}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            placeholder="Search equipment..."
-            placeholderTextColor={AppColors.textMuted}
-            value={search}
-            onChangeText={setSearch}
-            style={styles.searchInput}
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-          />
-          {search ? (
-            <Pressable onPress={() => setSearch('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color={AppColors.textMuted} />
-            </Pressable>
-          ) : null}
-        </View>
-
-        {/* Filter Chips */}
-        <View style={styles.filterSection}>
-          <FilterChips selected={filter} onSelect={setFilter} />
-        </View>
-
-        {/* List Content */}
-        {loading && items.length === 0 ? (
-          <View style={styles.centerContainer}>
-            <ActivityIndicator size="large" color={AppColors.navy} />
-          </View>
-        ) : items.length === 0 ? (
-          <EmptyState
-            message="No equipment added yet. Start by adding your first item to the inventory."
-            actionText="Add Equipment"
-            onAction={handleAddEquipment}
-          />
-        ) : (
-          <FlatList
-            data={items}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <EquipmentCard item={item} onPress={() => handleItemPress(item.id)} />
-            )}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={AppColors.navy} />
-            }
-          />
-        )}
-
+    <TabPageLayout
+      backgroundColor={AppColors.white}
+      header={
+        <ScreenHeader
+          variant="tab"
+          title="Equipment"
+          right={<ScreenHeaderIconAction icon="log-out-outline" label="Log out" onPress={handleLogout} />}
+        />
+      }
+      floatingAction={
         <Fab
           icon="add"
           label="Add Equipment"
           onPress={handleAddEquipment}
         />
+      }
+    >
+      {/* Search Input Bar */}
+      <View style={[tabPageStyles.searchFrame, styles.searchContainer]}>
+        <Ionicons
+          name="search-outline"
+          size={18}
+          color={AppColors.textMuted}
+          style={tabPageStyles.searchIcon}
+        />
+        <TextInput
+          placeholder="Search equipment..."
+          placeholderTextColor={AppColors.textMuted}
+          value={search}
+          onChangeText={setSearch}
+          style={styles.searchInput}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+        {search ? (
+          <Pressable onPress={() => setSearch('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={18} color={AppColors.textMuted} />
+          </Pressable>
+        ) : null}
       </View>
-    </SafeAreaView>
+
+      {/* Filter Chips */}
+      <FilterChips options={FILTER_OPTIONS} selected={filter} onSelect={setFilter} />
+
+      {/* List Content */}
+      {loading && items.length === 0 ? (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={AppColors.navy} />
+        </View>
+      ) : items.length === 0 ? (
+        <EmptyState
+          message="No equipment added yet. Start by adding your first item to the inventory."
+          actionText="Add Equipment"
+          onAction={handleAddEquipment}
+        />
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <EquipmentCard item={item} onPress={() => handleItemPress(item.id)} />
+          )}
+          contentContainerStyle={tabPageStyles.listAfterFilters}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={AppColors.navy} />
+          }
+        />
+      )}
+    </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 14,
-  },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: AppColors.text,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPressed: {
-    opacity: 0.7,
-  },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    marginHorizontal: 20,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 42,
-    marginBottom: 12,
-  },
-  searchIcon: {
-    marginRight: 8,
+    backgroundColor: AppColors.background,
+    borderColor: AppColors.border,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
     color: AppColors.text,
     padding: 0,
-  },
-  filterSection: {
-    paddingHorizontal: 20,
-    marginBottom: 14,
   },
   centerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 90,
   },
 });

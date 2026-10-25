@@ -61,8 +61,8 @@ export default function AddEquipmentScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScreenHeader title="Add Equipment" showBack />
+    <SafeAreaView style={styles.safeArea} edges={[]}>
+      <ScreenHeader title="Add Equipment" variant="detail" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}

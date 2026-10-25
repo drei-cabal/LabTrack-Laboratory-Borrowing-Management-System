@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { BorrowRecordEntity } from '../../types';
@@ -33,10 +34,10 @@ export function ActiveRecordCard({ record }: ActiveRecordCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 14,
     marginBottom: 10,
   },
@@ -47,12 +48,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   name: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
   },
   idText: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
     marginBottom: 8,
   },
@@ -62,11 +65,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dateText: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
   },
   overdueDateText: {
     color: AppColors.overdue,
-    fontWeight: '600',
+    fontWeight: AppTypography.weight.semibold,
   },
 });

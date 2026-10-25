@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { AppColors } from '../../constants/colors';
@@ -34,9 +35,11 @@ export function RoleBadge({ role, style }: RoleBadgeProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 3,
+    borderWidth: 1,
+    borderColor: AppColors.navy,
     alignSelf: 'flex-start',
     justifyContent: 'center',
     alignItems: 'center',
@@ -45,19 +48,21 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.navy,
   },
   asstBadge: {
-    backgroundColor: '#F4F5F7',
-    borderWidth: 1,
-    borderColor: '#E0E2E7',
+    backgroundColor: AppColors.background,
+    borderColor: AppColors.border,
   },
   text: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
     letterSpacing: 0.5,
+    lineHeight: AppTypography.lineHeight.chip,
   },
   adminText: {
     color: AppColors.white,
   },
   asstText: {
-    color: '#6B7280',
+    color: AppColors.textSecondary,
+    fontWeight: AppTypography.weight.semibold,
   },
 });

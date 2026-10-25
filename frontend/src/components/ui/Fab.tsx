@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import { useState, type ComponentProps } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text } from 'react-native';
@@ -61,8 +62,9 @@ const styles = StyleSheet.create({
   },
   label: {
     color: AppColors.white,
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.semibold,
     flexShrink: 1,
   },
 });

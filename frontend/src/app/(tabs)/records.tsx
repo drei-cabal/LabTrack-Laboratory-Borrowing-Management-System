@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
@@ -8,14 +9,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Keyboard,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { AppColors } from '../../constants/colors';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
+import { FilterChips } from '../../components/ui/FilterChips';
 import { Fab } from '../../components/ui/Fab';
+import { ScreenHeader, ScreenHeaderIconAction } from '../../components/ui/ScreenHeader';
 import { useRecords } from '../../hooks/useRecords';
 import { ROUTES } from '../../routing/routes';
 import { formatDateDisplay } from '../../utils/date';
@@ -67,28 +71,6 @@ export default function RecordsScreen() {
     router.push(ROUTES.RECORD_RETURN as any);
   }, 500);
 
-  const renderBadge = (status: TransactionSummary['status']) => {
-    let bg = '#DBEAFE';
-    let text = '#2563EB';
-    let label = '• Borrowed';
-
-    if (status === 'overdue') {
-      bg = '#FEE2E2';
-      text = '#DC2626';
-      label = '• Overdue';
-    } else if (status === 'returned') {
-      bg = '#DCFCE7';
-      text = '#16A34A';
-      label = '• Returned';
-    }
-
-    return (
-      <View style={[styles.badge, { backgroundColor: bg }]}>
-        <Text style={[styles.badgeText, { color: text }]}>{label}</Text>
-      </View>
-    );
-  };
-
   const renderCard = ({ item }: { item: TransactionSummary }) => {
     const isOverdue = item.status === 'overdue';
     const isReturned = item.status === 'returned';
@@ -102,7 +84,7 @@ export default function RecordsScreen() {
         {/* Top line: Borrower Name + Badge */}
         <View style={styles.cardHeader}>
           <Text style={styles.borrowerName}>{item.borrower_name}</Text>
-          {renderBadge(item.status)}
+          <StatusBadge status={item.status} />
         </View>
 
         {/* Middle line: Items Summary */}
@@ -131,28 +113,37 @@ export default function RecordsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Records</Text>
-        <TouchableOpacity
-          style={styles.headerSearchBtn}
-          onPress={() => {
-            searchInputRef.current?.focus();
-          }}
-        >
-          <Ionicons name="search-outline" size={20} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
-
+    <TabPageLayout
+      backgroundColor={AppColors.background}
+      header={
+        <ScreenHeader
+          variant="tab"
+          title="Records"
+          right={
+            <ScreenHeaderIconAction
+              icon="search-outline"
+              label="Search records"
+              onPress={() => searchInputRef.current?.focus()}
+            />
+          }
+        />
+      }
+      floatingAction={
+        <Fab
+          icon="arrow-undo-outline"
+          label="Return Item"
+          onPress={handleReturnPress}
+        />
+      }
+    >
       {/* Search Input Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={18} color="#94A3B8" style={styles.searchIcon} />
+      <View style={[tabPageStyles.searchFrame, styles.searchContainer]}>
+        <Ionicons name="search-outline" size={18} color={AppColors.textMuted} style={tabPageStyles.searchIcon} />
         <TextInput
           ref={searchInputRef}
           style={styles.searchInput}
           placeholder="Search by borrower name..."
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={AppColors.textMuted}
           value={searchQuery}
           onChangeText={setSearchQuery}
           clearButtonMode="while-editing"
@@ -160,29 +151,13 @@ export default function RecordsScreen() {
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={18} color="#94A3B8" />
+            <Ionicons name="close-circle" size={18} color={AppColors.textMuted} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Filter Tabs */}
-      <View style={styles.filterTabsRow}>
-        {FILTER_TABS.map((tab) => {
-          const isActive = filter === tab.key;
-          return (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.filterTab, isActive && styles.filterTabActive]}
-              onPress={() => setFilter(tab.key)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.filterTabText, isActive && styles.filterTabTextActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      <FilterChips options={FILTER_TABS} selected={filter} onSelect={setFilter} />
 
       {/* Transactions List */}
       {loading && !refreshing ? (
@@ -197,7 +172,7 @@ export default function RecordsScreen() {
           renderItem={renderCard}
           keyboardDismissMode="on-drag"
           contentContainerStyle={[
-            styles.listContent,
+            tabPageStyles.listAfterFilters,
             filteredTransactions.length === 0 && styles.listEmptyContent,
           ]}
           refreshControl={
@@ -209,124 +184,46 @@ export default function RecordsScreen() {
             />
           }
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Ionicons name="document-text-outline" size={48} color="#CBD5E1" />
-              <Text style={styles.emptyTitle}>No Records Found</Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery
-                  ? 'No matching borrower or transaction ID found.'
-                  : `There are currently no ${filter !== 'all' ? filter : ''} transactions.`}
-              </Text>
-            </View>
+            <EmptyState
+              icon="document-text-outline"
+              title="No Records Found"
+              message={searchQuery
+                ? 'No matching borrower or transaction ID found.'
+                : `There are currently no ${filter !== 'all' ? filter : ''} transactions.`}
+              style={styles.emptyState}
+            />
           }
         />
       )}
-
-      <Fab
-        icon="arrow-undo-outline"
-        label="Return Item"
-        onPress={handleReturnPress}
-      />
-    </SafeAreaView>
+    </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#0F172A',
-    letterSpacing: -0.5,
-  },
-  headerSearchBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    height: 42,
-  },
-  searchIcon: {
-    marginRight: 8,
+    backgroundColor: AppColors.white,
+    borderColor: AppColors.border,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.text,
     height: '100%',
   },
   clearBtn: {
     padding: 4,
   },
-  filterTabsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-    backgroundColor: '#F8FAFC',
-  },
-  filterTab: {
-    paddingVertical: 7,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  filterTabActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
-  },
-  filterTabText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#64748B',
-  },
-  filterTabTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 90,
-  },
   listEmptyContent: {
     flexGrow: 1,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 10,
     padding: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -340,25 +237,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   borrowerName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.bodyStrong,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.text,
   },
   itemsRow: {
     marginBottom: 10,
   },
   itemsSummary: {
-    fontSize: 13,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.textSecondary,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -366,30 +256,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: AppColors.background,
   },
   txnCode: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#94A3B8',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.medium,
+    color: AppColors.textMuted,
   },
   borrowDate: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    color: AppColors.textMuted,
   },
   dueDate: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.semibold,
+    color: AppColors.textSecondary,
   },
   overdueDueDate: {
-    color: '#DC2626',
-    fontWeight: '700',
+    color: AppColors.red,
+    fontWeight: AppTypography.weight.bold,
   },
   returnedDate: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#16A34A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.semibold,
+    color: AppColors.green,
   },
   center: {
     flex: 1,
@@ -399,27 +293,11 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 10,
-    fontSize: 13,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.textSecondary,
   },
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 24,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 18,
   },
 });

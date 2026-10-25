@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -26,7 +27,7 @@ export default function EditStaffScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
-  const [staff, setStaff] = useState<StaffEntity | null>(null);
+  const [, setStaff] = useState<StaffEntity | null>(null);
   const [loadingStaff, setLoadingStaff] = useState(true);
 
   // Form State
@@ -207,8 +208,8 @@ export default function EditStaffScreen() {
 
   if (loadingStaff) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        <ScreenHeader title="Edit Staff" showBack={true} />
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
+        <ScreenHeader title="Edit Staff" variant="detail" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={AppColors.navy} />
         </View>
@@ -217,8 +218,8 @@ export default function EditStaffScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <ScreenHeader title="Edit Staff" showBack={true} />
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      <ScreenHeader title="Edit Staff" variant="detail" />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -236,7 +237,7 @@ export default function EditStaffScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Full Name"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={AppColors.textMuted}
                 value={fullName}
                 onChangeText={(text) => {
                   setFullName(text);
@@ -255,7 +256,7 @@ export default function EditStaffScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Username"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={AppColors.textMuted}
                 value={username}
                 onChangeText={(text) => {
                   setUsername(text);
@@ -275,7 +276,7 @@ export default function EditStaffScreen() {
               <TextInput
                 style={[styles.input, styles.passwordInput]}
                 placeholder="Leave blank to keep current password"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={AppColors.textMuted}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -295,7 +296,7 @@ export default function EditStaffScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color="#64748B"
+                  color={AppColors.textSecondary}
                 />
               </Pressable>
             </View>
@@ -372,13 +373,7 @@ export default function EditStaffScreen() {
             )}
 
             {/* Danger: Delete Account */}
-            <Pressable
-              onPress={() => setDeleteModalVisible(true)}
-              style={({ pressed }) => [styles.deleteBtn, pressed && styles.deleteBtnPressed]}
-              accessibilityRole="button"
-            >
-              <Text style={styles.deleteBtnText}>Delete Account</Text>
-            </Pressable>
+            <Button title="Delete Account" variant="destructive" onPress={() => setDeleteModalVisible(true)} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -508,7 +503,7 @@ export default function EditStaffScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
   },
   loadingContainer: {
     flex: 1,
@@ -527,24 +522,26 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
     marginBottom: 8,
   },
   inputWrapper: {
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.bodyStrong,
     color: AppColors.navy,
     height: '100%',
   },
@@ -555,18 +552,19 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   inputError: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
+    borderColor: AppColors.red,
+    backgroundColor: AppColors.overdueBg,
   },
   errorText: {
-    fontSize: 12,
-    color: '#EF4444',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    color: AppColors.red,
     marginTop: 4,
-    fontWeight: '500',
+    fontWeight: AppTypography.weight.medium,
   },
   segmentedContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: AppColors.background,
     borderRadius: 8,
     padding: 4,
     gap: 4,
@@ -585,31 +583,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   segmentText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.semibold,
   },
   segmentTextActive: {
-    color: '#FFFFFF',
+    color: AppColors.white,
   },
   segmentTextInactive: {
-    color: '#64748B',
+    color: AppColors.textSecondary,
   },
   actionsStack: {
     marginTop: 16,
     gap: 12,
-  },
-  deleteBtn: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteBtnPressed: {
-    opacity: 0.7,
-  },
-  deleteBtnText: {
-    color: '#DC2626',
-    fontSize: 14,
-    fontWeight: '600',
   },
 
   // Modal / Bottom Sheet
@@ -626,9 +612,8 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
 
-
   modalSheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
@@ -655,15 +640,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sheetTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.detailTitle,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
     marginBottom: 10,
   },
   sheetBody: {
-    fontSize: 14,
-    color: '#64748B',
-    lineHeight: 20,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.textSecondary,
+    lineHeight: AppTypography.lineHeight.body,
     marginBottom: 24,
   },
   sheetActions: {

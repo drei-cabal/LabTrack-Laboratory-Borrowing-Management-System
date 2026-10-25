@@ -1,32 +1,35 @@
+import { AppColors } from '../../constants/colors';
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { Text, Pressable, StyleSheet, ScrollView } from 'react-native';
-import { AppColors } from '../../constants/colors';
+import { tabPageStyles } from './TabPageLayout';
 
 export type FilterOption = 'All' | 'Available' | 'Partial' | 'Out';
 
-export interface FilterChipsProps {
-  selected: FilterOption;
-  onSelect: (option: FilterOption) => void;
-  options?: FilterOption[];
-}
+export type FilterChipsProps<T extends string> = {
+  options: readonly { key: T; label: string }[];
+  selected: T;
+  onSelect: (key: T) => void;
+};
 
-export function FilterChips({
+export function FilterChips<T extends string>({
   selected,
   onSelect,
-  options = ['All', 'Available', 'Partial', 'Out'],
-}: FilterChipsProps) {
+  options,
+}: FilterChipsProps<T>) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
+      style={styles.scroller}
+      contentContainerStyle={[tabPageStyles.filterRow, styles.container]}
     >
       {options.map((opt) => {
-        const isActive = selected === opt;
+        const isActive = selected === opt.key;
         return (
           <Pressable
-            key={opt}
-            onPress={() => onSelect(opt)}
+            key={opt.key}
+            onPress={() => onSelect(opt.key)}
             style={({ pressed }) => [
               styles.chip,
               isActive ? styles.chipActive : styles.chipInactive,
@@ -34,6 +37,7 @@ export function FilterChips({
             ]}
             accessibilityRole="button"
             accessibilityState={{ selected: isActive }}
+            aria-pressed={isActive}
           >
             <Text
               style={[
@@ -41,7 +45,7 @@ export function FilterChips({
                 isActive ? styles.chipTextActive : styles.chipTextInactive,
               ]}
             >
-              {opt}
+              {opt.label}
             </Text>
           </Pressable>
         );
@@ -51,11 +55,14 @@ export function FilterChips({
 }
 
 const styles = StyleSheet.create({
+  scroller: {
+    flexGrow: 0,
+    flexShrink: 0,
+    minHeight: 0,
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
-    gap: 8,
   },
   chip: {
     paddingHorizontal: 16,
@@ -64,24 +71,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   chipActive: {
-    backgroundColor: AppColors.navy,
-    borderColor: AppColors.navy,
+    backgroundColor: AppColors.text,
+    borderColor: AppColors.text,
   },
   chipInactive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
+    backgroundColor: AppColors.white,
+    borderColor: AppColors.border,
   },
   chipPressed: {
     opacity: 0.8,
   },
   chipText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
   },
   chipTextActive: {
-    color: '#FFFFFF',
+    color: AppColors.white,
+    fontWeight: AppTypography.weight.semibold,
   },
   chipTextInactive: {
     color: AppColors.textSecondary,
+    fontWeight: AppTypography.weight.medium,
   },
 });

@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { EquipmentWithDetails } from '../../types';
@@ -51,10 +52,10 @@ export function EquipmentCard({ item, onPress }: EquipmentCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 14,
     marginBottom: 10,
     shadowColor: '#000',
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   cardPressed: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderColor: '#CBD5E1',
   },
   topRow: {
@@ -84,28 +85,31 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   productIdBadge: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: AppColors.background,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
   },
   productIdText: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.micro,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.bodyStrong,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
     flex: 1,
   },
   description: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
-    lineHeight: 16,
+    lineHeight: AppTypography.lineHeight.small,
   },
   bottomRow: {
     marginTop: 4,

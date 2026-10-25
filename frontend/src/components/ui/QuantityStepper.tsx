@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { AppColors } from '../../constants/colors';
@@ -78,8 +79,9 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
     marginBottom: 10,
   },
@@ -96,9 +98,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   stepBtnMinus: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: AppColors.background,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
   },
   stepBtnPlus: {
     backgroundColor: AppColors.navy,
@@ -110,16 +112,18 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   stepBtnMinusText: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.large,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
     lineHeight: 22,
   },
   stepBtnPlusText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.detailTitle,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.white,
-    lineHeight: 20,
+    lineHeight: AppTypography.lineHeight.body,
   },
   stepBtnTextDisabled: {
     color: AppColors.textMuted,
@@ -130,8 +134,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   valueText: {
-    fontSize: 17,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.quantity,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
   },
 });

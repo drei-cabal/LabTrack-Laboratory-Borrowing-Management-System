@@ -1,3 +1,4 @@
+import { AppTypography } from '../constants/typography';
 import React, { useState } from 'react';
 import {
   View,
@@ -13,12 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { Button } from '../components/ui/Button';
+import { AppColors } from '../constants/colors';
 import { ROUTES } from '../routing/routes';
 
 import { authService } from '../services/authService';
 import '../login-focus.css';
 
-const navy = '#0A234A';
+const navy = AppColors.navy;
 
 function LabMark() {
   return (
@@ -31,7 +34,7 @@ function LabMark() {
       </View>
       {/* Check/Close Badge */}
       <View style={styles.checkBadge}>
-        <Ionicons name="close" size={8} color="#FFFFFF" />
+        <Ionicons name="close" size={8} color={AppColors.white} />
       </View>
     </View>
   );
@@ -146,17 +149,12 @@ export default function LoginScreen() {
               <Text style={styles.errorText}>{errorMessage}</Text>
             ) : null}
 
-            <Pressable
-              accessibilityRole="button"
+            <Button
+              title={loggingIn ? 'Signing in…' : 'Log In'}
               onPress={handleLogin}
               disabled={loggingIn}
-              style={({ pressed }) => [
-                styles.loginButton,
-                (pressed || loggingIn) && styles.loginButtonPressed,
-              ]}
-            >
-              <Text style={styles.loginText}>{loggingIn ? 'Signing in…' : 'Log In'}</Text>
-            </Pressable>
+              style={styles.loginButton}
+            />
 
             <Text style={styles.helpText}>Forgot your login? Contact your Lab Admin.</Text>
           </View>
@@ -191,8 +189,9 @@ export default function LoginScreen() {
                   style={{
                     marginBottom: 10,
                     color: '#92400E',
-                    fontSize: 12,
-                    fontWeight: '700',
+                    fontFamily: AppTypography.fontFamily,
+                    fontSize: AppTypography.size.small,
+                    fontWeight: AppTypography.weight.bold,
                   }}
                 >
                   DEV ONLY: Temporary Navigation
@@ -211,7 +210,7 @@ export default function LoginScreen() {
                         opacity: pressed ? 0.8 : 1,
                       })}
                     >
-                      <Text style={{ color: '#FFFFFF', fontSize: 11, fontWeight: '600' }}>
+                      <Text style={{ color: AppColors.white, fontFamily: AppTypography.fontFamily, fontSize: AppTypography.size.chip, fontWeight: AppTypography.weight.semibold }}>
                         {page.label}
                       </Text>
                     </Pressable>
@@ -235,7 +234,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
   },
   keyboardView: {
     flex: 1,
@@ -264,7 +263,7 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 3,
     borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    borderColor: AppColors.white,
     paddingTop: 6,
     alignItems: 'center',
     gap: 3,
@@ -275,14 +274,14 @@ const styles = StyleSheet.create({
     width: 10,
     height: 5,
     borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    borderColor: AppColors.white,
     borderRadius: 2,
     backgroundColor: navy,
   },
   clipboardLine: {
     width: 12,
     height: 1.25,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
   },
   checkBadge: {
     position: 'absolute',
@@ -293,20 +292,22 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: navy,
     borderWidth: 1.25,
-    borderColor: '#FFFFFF',
+    borderColor: AppColors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   brandTitle: {
     color: navy,
-    fontSize: 24,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.title,
+    fontWeight: AppTypography.weight.bold,
     lineHeight: 28,
   },
   brandSubtitle: {
     color: '#59708F',
-    fontSize: 12,
-    lineHeight: 18,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    lineHeight: AppTypography.lineHeight.supporting,
     marginTop: 2,
   },
   form: {
@@ -314,8 +315,9 @@ const styles = StyleSheet.create({
   },
   label: {
     color: '#0F1725',
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.semibold,
     marginBottom: 8,
   },
   passwordLabel: {
@@ -326,46 +328,34 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#D9DDE4',
-    backgroundColor: '#F4F5F7',
+    backgroundColor: AppColors.background,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
   },
   inputWrapperError: {
-    borderColor: '#EF4444',
+    borderColor: AppColors.red,
   },
   textInput: {
     flex: 1,
     color: navy,
-    fontSize: 13,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
     height: '100%',
     padding: 0,
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 11,
+    color: AppColors.red,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
     marginTop: 6,
   },
-  loginButton: {
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: navy,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 24,
-  },
-  loginButtonPressed: {
-    opacity: 0.85,
-  },
-  loginText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
+  loginButton: { marginTop: 24 },
   helpText: {
     color: '#5D6F8A',
-    fontSize: 11,
-    lineHeight: 16,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    lineHeight: AppTypography.lineHeight.small,
     marginTop: 16,
   },
   footer: {
@@ -375,7 +365,8 @@ const styles = StyleSheet.create({
   },
   versionText: {
     color: '#96A1B5',
-    fontSize: 11,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+
   },
 });

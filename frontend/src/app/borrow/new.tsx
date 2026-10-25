@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React, { useState } from 'react';
 import {
   View,
@@ -280,11 +281,11 @@ export default function NewBorrowTransactionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
       {/* Screen Header with Back Arrow */}
       <ScreenHeader
         title="New Transaction"
-        showBack
+        variant="detail"
         onBack={handleBack}
       />
 
@@ -392,7 +393,7 @@ export default function NewBorrowTransactionScreen() {
                               !isAvailable && styles.checkboxDisabled,
                             ]}
                           >
-                            {isSelected && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                            {isSelected && <Ionicons name="checkmark" size={14} color={AppColors.white} />}
                           </View>
 
                           <View style={styles.itemCardInfo}>
@@ -461,7 +462,7 @@ export default function NewBorrowTransactionScreen() {
                           ]}
                           hitSlop={6}
                         >
-                          <Ionicons name="close" size={14} color="#EF4444" />
+                          <Ionicons name="close" size={14} color={AppColors.red} />
                         </Pressable>
                       </View>
                     </View>
@@ -530,7 +531,7 @@ export default function NewBorrowTransactionScreen() {
                       onPress={() => setPhotoUri(null)}
                       style={styles.photoRemoveBadge}
                     >
-                      <Ionicons name="close" size={14} color="#FFFFFF" />
+                      <Ionicons name="close" size={14} color={AppColors.white} />
                     </Pressable>
                   </View>
                 ) : (
@@ -539,15 +540,7 @@ export default function NewBorrowTransactionScreen() {
                     <Text style={styles.cameraText}>
                       Capture photo of items with borrower present
                     </Text>
-                    <Pressable
-                      onPress={handleCapturePhoto}
-                      style={({ pressed }) => [
-                        styles.openCameraBtn,
-                        pressed && styles.openCameraBtnPressed,
-                      ]}
-                    >
-                      <Text style={styles.openCameraBtnText}>Open Camera</Text>
-                    </Pressable>
+                    <Button title="Open Camera" variant="secondary" size="sm" fullWidth={false} onPress={handleCapturePhoto} />
                   </View>
                 )}
               </View>
@@ -613,7 +606,7 @@ export default function NewBorrowTransactionScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
   },
   keyboardView: {
     flex: 1,
@@ -629,7 +622,8 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   instructionText: {
-    fontSize: 13,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
     color: AppColors.textSecondary,
     marginBottom: 16,
   },
@@ -642,22 +636,22 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   itemCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   itemCardSelected: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: AppColors.borrowedBg,
     borderColor: AppColors.navy,
   },
   itemCardDisabled: {
     opacity: 0.5,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: AppColors.background,
   },
   itemCardPressed: {
     opacity: 0.85,
@@ -676,48 +670,51 @@ const styles = StyleSheet.create({
     borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
   },
   checkboxSelected: {
     backgroundColor: AppColors.navy,
     borderColor: AppColors.navy,
   },
   checkboxDisabled: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
     borderColor: '#CBD5E1',
   },
   itemCardInfo: {
     flex: 1,
   },
   itemName: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
   },
   itemNameDisabled: {
     color: AppColors.textMuted,
   },
   itemAvailText: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
     marginTop: 2,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+
   },
   selectedSection: {
     marginTop: 8,
     marginBottom: 8,
   },
   selectedHeader: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 10,
   },
   selectedRow: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -727,8 +724,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   selectedItemName: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
     flex: 1,
     marginRight: 8,
@@ -742,16 +740,17 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: AppColors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepperBtnPressed: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
   },
   stepperValue: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
     minWidth: 18,
     textAlign: 'center',
@@ -769,17 +768,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FECACA',
   },
   datesCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 16,
     gap: 12,
     marginTop: 8,
   },
   datesHeader: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.textSecondary,
     letterSpacing: 0.8,
   },
@@ -789,25 +789,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateLabel: {
-    fontSize: 13,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
     color: AppColors.textSecondary,
   },
   dateValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
   },
   dateValueBold: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
   },
   photoSection: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
     marginBottom: 10,
   },
@@ -820,31 +824,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     gap: 8,
   },
   cameraText: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
     textAlign: 'center',
     maxWidth: 220,
-  },
-  openCameraBtn: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginTop: 6,
-  },
-  openCameraBtnPressed: {
-    backgroundColor: '#F1F5F9',
-  },
-  openCameraBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: AppColors.text,
   },
   photoPreviewContainer: {
     width: '100%',
@@ -864,21 +852,22 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#EF4444',
+    backgroundColor: AppColors.red,
     alignItems: 'center',
     justifyContent: 'center',
   },
   summaryCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 16,
     gap: 10,
   },
   summaryTitle: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.textSecondary,
     letterSpacing: 0.8,
     marginBottom: 2,
@@ -889,27 +878,30 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   summaryLabel: {
-    fontSize: 12,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
     color: AppColors.textSecondary,
     width: 90,
   },
   summaryValue: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.text,
     flex: 1,
     textAlign: 'right',
   },
   summaryValueBold: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
     flex: 1,
     textAlign: 'right',
   },
   summaryDivider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
     marginVertical: 4,
   },
 });

@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { AppColors } from '../../constants/colors';
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
   barTrack: {
     flex: 1,
     height: 4,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: AppColors.border,
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -41,8 +42,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   label: {
-    fontSize: 11,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
     color: AppColors.textSecondary,
-    fontWeight: '500',
+    fontWeight: AppTypography.weight.medium,
   },
 });

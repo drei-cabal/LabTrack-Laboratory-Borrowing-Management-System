@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
   Pressable,
@@ -21,6 +22,7 @@ export interface ButtonProps {
   icon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  accessibilityLabel?: string;
 }
 
 export function Button({
@@ -34,6 +36,7 @@ export function Button({
   icon,
   style,
   textStyle,
+  accessibilityLabel = title,
 }: ButtonProps) {
   const getContainerStyle = (pressed: boolean): StyleProp<ViewStyle> => {
     const list: StyleProp<ViewStyle> = [styles.base];
@@ -48,17 +51,11 @@ export function Button({
         if (pressed) list.push(styles.pressedPrimary);
         break;
       case 'secondary':
+      case 'outline':
         list.push(styles.secondary);
         if (pressed) list.push(styles.pressedSecondary);
         break;
-      case 'outline':
-        list.push(styles.outline);
-        if (pressed) list.push(styles.pressedOutline);
-        break;
       case 'danger':
-        list.push(styles.danger);
-        if (pressed) list.push(styles.pressedDanger);
-        break;
       case 'destructive':
       case 'danger-outline':
         list.push(styles.dangerOutline);
@@ -84,14 +81,10 @@ export function Button({
         list.push(styles.primaryText);
         break;
       case 'secondary':
+      case 'outline':
         list.push(styles.secondaryText);
         break;
-      case 'outline':
-        list.push(styles.outlineText);
-        break;
       case 'danger':
-        list.push(styles.dangerText);
-        break;
       case 'destructive':
       case 'danger-outline':
         list.push(styles.dangerOutlineText);
@@ -126,12 +119,13 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => getContainerStyle(pressed)}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: disabled || loading }}
     >
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? AppColors.white : AppColors.navy}
+          color={variant === 'primary' ? AppColors.white : ['danger', 'danger-outline', 'destructive'].includes(variant) ? AppColors.red : AppColors.navy}
         />
       ) : (
         <>
@@ -145,7 +139,7 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    height: 48,
+    height: 46,
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -157,14 +151,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sizeSm: {
-    height: 38,
+    height: 34,
     paddingHorizontal: 14,
     borderRadius: 6,
   },
   sizeLg: {
     height: 52,
     paddingHorizontal: 24,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   primary: {
     backgroundColor: AppColors.navy,
@@ -173,48 +167,38 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   secondary: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.25,
+    backgroundColor: AppColors.white,
+    borderWidth: 1,
     borderColor: AppColors.navy,
   },
   pressedSecondary: {
-    backgroundColor: '#F4F5F7',
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.25,
-    borderColor: AppColors.navy,
-  },
-  pressedOutline: {
-    backgroundColor: '#F4F5F7',
-  },
-  danger: {
-    backgroundColor: '#DC2626',
-  },
-  pressedDanger: {
-    opacity: 0.85,
+    backgroundColor: AppColors.background,
   },
   dangerOutline: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.25,
-    borderColor: '#DC2626',
+    backgroundColor: AppColors.white,
+    borderWidth: 1,
+    borderColor: AppColors.red,
   },
   pressedDangerOutline: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: AppColors.overdueBg,
   },
 
   disabled: {
     opacity: 0.5,
   },
   baseText: {
-    fontSize: 15,
-    fontWeight: '600',
+    lineHeight: AppTypography.lineHeight.button,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.button,
+    fontWeight: AppTypography.weight.semibold,
   },
   textSm: {
-    fontSize: 13,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
   },
   textLg: {
-    fontSize: 16,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.section,
   },
   primaryText: {
     color: AppColors.white,
@@ -222,14 +206,8 @@ const styles = StyleSheet.create({
   secondaryText: {
     color: AppColors.navy,
   },
-  outlineText: {
-    color: AppColors.navy,
-  },
-  dangerText: {
-    color: AppColors.white,
-  },
   dangerOutlineText: {
-    color: '#DC2626',
+    color: AppColors.red,
   },
   disabledText: {
     color: AppColors.textMuted,

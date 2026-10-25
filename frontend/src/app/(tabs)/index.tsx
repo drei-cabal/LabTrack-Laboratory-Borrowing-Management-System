@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
   View,
@@ -9,16 +10,21 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDashboard } from '../../hooks/useDashboard';
 import { AppColors } from '../../constants/colors';
+import { RoleBadge } from '../../components/ui/RoleBadge';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { ROUTES } from '../../routing/routes';
 import { useGuardedPress } from '../../utils/guards';
 import { DashboardOverdueItem, DashboardRecentTransaction } from '../../types';
 import { StatusBadge } from '../../components/ui/StatusBadge';
+import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { Fab } from '../../components/ui/Fab';
+import { MIN_HEADER_TOP_INSET } from '../../components/ui/ScreenHeader';
 
 
 function formatWelcomeName(name?: string, username?: string): string {
@@ -46,6 +52,8 @@ function formatWelcomeName(name?: string, username?: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const { data, loading, refreshing, refresh, currentUser } = useDashboard();
 
   const handleNewTransactionPress = useGuardedPress(() => {
@@ -84,26 +92,35 @@ export default function HomeScreen() {
   const recentTransactions = data?.recent_transactions ?? [];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      {/* ─── Top Header Banner (Dark Navy) ─── */}
-      <View style={styles.headerBanner}>
-        <View style={styles.welcomeRow}>
-          <View style={styles.welcomeTextContainer}>
+    <TabPageLayout
+      header={
+        <View style={[
+          styles.welcomeBanner,
+          {
+            paddingTop: Math.max(insets.top, MIN_HEADER_TOP_INSET) + 16,
+            paddingLeft: insets.left + 20,
+            paddingRight: insets.right + 20,
+            marginLeft: -insets.left,
+            marginRight: -insets.right,
+          },
+        ]}>
+          {isFocused ? <StatusBar style="light" /> : null}
+          <View style={styles.welcomeText}>
             <Text style={styles.welcomeLabel}>WELCOME BACK</Text>
-            <Text style={styles.welcomeName} numberOfLines={1}>
-              {welcomeName}
-            </Text>
+            <Text style={styles.welcomeName} numberOfLines={1}>{welcomeName}</Text>
           </View>
-
-          {/* Role Badge */}
-          <View style={[styles.roleBadge, isAdmin ? styles.adminBadge : styles.asstBadge]}>
-            <Text style={[styles.roleBadgeText, isAdmin ? styles.adminBadgeText : styles.asstBadgeText]}>
-              {isAdmin ? 'ADMIN' : 'ASST.'}
-            </Text>
-          </View>
+          <RoleBadge role={isAdmin ? 'admin' : 'assistant'} />
         </View>
-      </View>
-
+      }
+      backgroundColor={AppColors.white}
+      floatingAction={
+        <Fab
+          icon="add"
+          label="New Transaction"
+          onPress={handleNewTransactionPress}
+        />
+      }
+    >
       {/* ─── Scrollable Content ─── */}
       {loading && !data ? (
         <View style={styles.loadingContainer}>
@@ -111,7 +128,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={tabPageStyles.listWithoutControls}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -132,7 +149,7 @@ export default function HomeScreen() {
               accessibilityLabel="View equipment"
             >
               <View style={styles.statIconContainer}>
-                <Ionicons name="cube-outline" size={20} color="#64748B" />
+                <Ionicons name="cube-outline" size={20} color={AppColors.textSecondary} />
               </View>
               <Text style={styles.statNumber}>{stats.total_equipment}</Text>
               <Text style={styles.statLabel}>Equipment</Text>
@@ -146,7 +163,7 @@ export default function HomeScreen() {
               accessibilityLabel="View borrowed records"
             >
               <View style={styles.statIconContainer}>
-                <Ionicons name="repeat-outline" size={20} color="#2563EB" />
+                <Ionicons name="repeat-outline" size={20} color={AppColors.blue} />
               </View>
               <Text style={[styles.statNumber, styles.borrowedNumber]}>{stats.total_borrowed}</Text>
               <Text style={styles.statLabel}>Borrowed</Text>
@@ -160,7 +177,7 @@ export default function HomeScreen() {
               accessibilityLabel="View overdue records"
             >
               <View style={styles.statIconContainer}>
-                <Ionicons name="alert-circle-outline" size={20} color="#DC2626" />
+                <Ionicons name="alert-circle-outline" size={20} color={AppColors.red} />
               </View>
               <Text style={[styles.statNumber, styles.overdueNumber]}>{stats.total_overdue}</Text>
               <Text style={styles.statLabel}>Overdue</Text>
@@ -181,10 +198,7 @@ export default function HomeScreen() {
             </View>
 
             {overdueItems.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Ionicons name="checkmark-circle-outline" size={24} color="#16A34A" />
-                <Text style={styles.emptyCardText}>No overdue equipment items</Text>
-              </View>
+              <EmptyState icon="checkmark-circle-outline" message="No overdue equipment items" style={styles.emptyCard} />
             ) : (
               overdueItems.map((item: DashboardOverdueItem) => (
                 <Pressable
@@ -233,29 +247,9 @@ export default function HomeScreen() {
             </View>
 
             {recentTransactions.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Ionicons name="document-text-outline" size={24} color="#94A3B8" />
-                <Text style={styles.emptyCardText}>No recent transactions</Text>
-              </View>
+              <EmptyState icon="document-text-outline" message="No recent transactions" style={styles.emptyCard} />
             ) : (
               recentTransactions.map((tx: DashboardRecentTransaction) => {
-                const isOverdue = tx.status === 'overdue';
-                const isReturned = tx.status === 'returned';
-
-                let statusColor = '#2563EB';
-                let statusBg = '#EFF6FF';
-                let statusLabel = 'Borrowed';
-
-                if (isOverdue) {
-                  statusColor = '#DC2626';
-                  statusBg = '#FEF2F2';
-                  statusLabel = 'Overdue';
-                } else if (isReturned) {
-                  statusColor = '#16A34A';
-                  statusBg = '#F0FDF4';
-                  statusLabel = 'Returned';
-                }
-
                 return (
                   <Pressable
                     key={tx.id}
@@ -289,87 +283,37 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       )}
-
-      <Fab
-        icon="add"
-        label="New Transaction"
-        onPress={handleNewTransactionPress}
-      />
-    </SafeAreaView>
+    </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  headerBanner: {
-    backgroundColor: AppColors.navy,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 22,
-  },
-  welcomeRow: {
+  welcomeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    flexShrink: 0,
+    marginBottom: 4, // The shared body adds 12px, preserving the 16px gap below the banner.
+    paddingHorizontal: 20,
+    paddingBottom: 22,
+    backgroundColor: AppColors.navy,
   },
-  welcomeTextContainer: {
-    flex: 1,
-    marginRight: 12,
-  },
+  welcomeText: { flex: 1, minWidth: 0, marginRight: 12 },
   welcomeLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94A3B8',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.headerBannerLabel,
     letterSpacing: 0.8,
     marginBottom: 4,
   },
-  welcomeName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
-  },
-  roleBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  adminBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  asstBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  roleBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  adminBadgeText: {
-    color: '#FFFFFF',
-  },
-  asstBadgeText: {
-    color: '#E2E8F0',
-  },
+  welcomeName: { fontFamily: AppTypography.fontFamily, fontSize: AppTypography.size.display, fontWeight: AppTypography.weight.heavy, color: AppColors.white },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  scrollContent: {
-    paddingTop: 16,
-    paddingBottom: 90, // Leave room for FAB and tabs
-  },
   statsRow: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
     gap: 10,
     marginBottom: 24,
   },
@@ -392,15 +336,15 @@ const styles = StyleSheet.create({
     }),
   },
   equipmentCard: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
+    backgroundColor: AppColors.white,
+    borderColor: AppColors.border,
   },
   borrowedCard: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: AppColors.borrowedBg,
     borderColor: '#DBEAFE',
   },
   overdueCard: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: AppColors.overdueBg,
     borderColor: '#FEE2E2',
   },
   cardPressed: {
@@ -411,24 +355,25 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   statNumber: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.display,
+    fontWeight: AppTypography.weight.heavy,
     color: AppColors.navy,
     marginBottom: 4,
   },
   borrowedNumber: {
-    color: '#2563EB',
+    color: AppColors.blue,
   },
   overdueNumber: {
-    color: '#DC2626',
+    color: AppColors.red,
   },
   statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.medium,
+    color: AppColors.textSecondary,
   },
   sectionContainer: {
-    paddingHorizontal: 16,
     marginBottom: 20,
   },
   sectionHeader: {
@@ -438,21 +383,23 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#475569',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.textSecondary,
     letterSpacing: 0.6,
   },
   viewAllText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.navy,
   },
   overdueItemCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 10,
@@ -474,15 +421,15 @@ const styles = StyleSheet.create({
     width: 3.5,
     height: '100%',
     minHeight: 36,
-    backgroundColor: '#DC2626',
+    backgroundColor: AppColors.red,
     borderRadius: 2,
     marginRight: 12,
   },
   transactionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 10,
@@ -505,62 +452,44 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   itemTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.bodyStrong,
+    fontWeight: AppTypography.weight.bold,
     color: AppColors.navy,
     marginBottom: 4,
   },
   itemBorrower: {
-    fontSize: 13,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.textSecondary,
   },
   itemRight: {
     alignItems: 'flex-end',
   },
   daysLateText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#DC2626',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.red,
     marginBottom: 3,
   },
   dueDateText: {
-    fontSize: 11,
-    color: '#94A3B8',
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 4,
-    marginBottom: 3,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    color: AppColors.textMuted,
   },
   dateText: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    color: AppColors.textMuted,
   },
   emptyCard: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: AppColors.background,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-  },
-  emptyCardText: {
-    fontSize: 13,
-    color: '#64748B',
   },
 });

@@ -1,10 +1,10 @@
+import { AppTypography } from '../../constants/typography';
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
@@ -13,6 +13,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { AppColors } from '../../constants/colors';
+import { Button } from '../../components/ui/Button';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { recordService } from '../../services/recordService';
 import { ROUTES } from '../../routing/routes';
 import { formatDateDisplay } from '../../utils/date';
@@ -74,38 +77,11 @@ export default function TransactionDetailScreen() {
     }
   }, 400);
 
-  const renderBadge = (status?: TransactionSummary['status']) => {
-    let bg = '#DBEAFE';
-    let text = '#2563EB';
-    let label = '• Borrowed';
-
-    if (status === 'overdue') {
-      bg = '#FEE2E2';
-      text = '#DC2626';
-      label = '• Overdue';
-    } else if (status === 'returned') {
-      bg = '#DCFCE7';
-      text = '#16A34A';
-      label = '• Returned';
-    }
-
-    return (
-      <View style={[styles.badge, { backgroundColor: bg }]}>
-        <Text style={[styles.badgeText, { color: text }]}>{label}</Text>
-      </View>
-    );
-  };
 
   if (loading && !refreshing) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#0F172A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Transaction Detail</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+        <ScreenHeader variant="detail" title="Transaction Detail" onBack={handleBackPress} />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={AppColors.navy} />
           <Text style={styles.loadingText}>Loading transaction...</Text>
@@ -116,21 +92,13 @@ export default function TransactionDetailScreen() {
 
   if (error || !transaction) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#0F172A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Transaction Detail</Text>
-          <View style={{ width: 40 }} />
-        </View>
+      <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+        <ScreenHeader variant="detail" title="Transaction Detail" onBack={handleBackPress} />
         <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={48} color="#DC2626" />
+          <Ionicons name="alert-circle-outline" size={48} color={AppColors.red} />
           <Text style={styles.errorTitle}>Error</Text>
           <Text style={styles.errorSubtitle}>{error || 'Transaction not found.'}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={() => fetchDetail()}>
-            <Text style={styles.retryBtnText}>Retry</Text>
-          </TouchableOpacity>
+          <Button title="Retry" variant="secondary" fullWidth={false} onPress={() => fetchDetail()} style={styles.retryBtn} />
         </View>
       </SafeAreaView>
     );
@@ -139,15 +107,8 @@ export default function TransactionDetailScreen() {
   const isReturned = transaction.status === 'returned';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* Top Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#0F172A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Transaction Detail</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
+      <ScreenHeader variant="detail" title="Transaction Detail" onBack={handleBackPress} />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -167,7 +128,7 @@ export default function TransactionDetailScreen() {
               <Text style={styles.borrowerName}>{transaction.borrower_name}</Text>
               <Text style={styles.txnCode}>{transaction.transaction_code}</Text>
             </View>
-            {renderBadge(transaction.status)}
+            <StatusBadge status={transaction.status} />
           </View>
         </View>
 
@@ -250,14 +211,11 @@ export default function TransactionDetailScreen() {
 
         {/* Action Button for returning items */}
         {!isReturned && (
-          <TouchableOpacity
-            style={styles.actionBtn}
-            activeOpacity={0.8}
+          <Button
+            title="Return Items"
             onPress={handleReturnPress}
-          >
-            <Ionicons name="arrow-undo-outline" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
-            <Text style={styles.actionBtnText}>Return Items</Text>
-          </TouchableOpacity>
+            icon={<Ionicons name="arrow-undo-outline" size={18} color={AppColors.white} />}
+          />
         )}
       </ScrollView>
     </SafeAreaView>
@@ -267,40 +225,19 @@ export default function TransactionDetailScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    backgroundColor: AppColors.background,
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 10,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -316,29 +253,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   borrowerName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.detailTitle,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.text,
     marginBottom: 2,
   },
   txnCode: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#94A3B8',
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.medium,
+    color: AppColors.textMuted,
   },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94A3B8',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.textMuted,
     letterSpacing: 0.8,
     marginBottom: 12,
   },
@@ -348,29 +279,33 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   fieldLabel: {
-    fontSize: 13,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.textSecondary,
     width: 100,
   },
   fieldValue: {
-    fontSize: 13,
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.text,
     flex: 1,
     textAlign: 'right',
   },
   fieldValueBold: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.text,
     flex: 1,
     textAlign: 'right',
   },
   fieldValueWrap: {
-    fontSize: 13,
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.text,
     flex: 1,
     textAlign: 'right',
-    lineHeight: 18,
+    lineHeight: AppTypography.lineHeight.supporting,
   },
   itemRow: {
     flexDirection: 'row',
@@ -378,7 +313,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: AppColors.background,
   },
   itemRowLast: {
     borderBottomWidth: 0,
@@ -388,51 +323,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.semibold,
+    color: AppColors.text,
   },
   itemSub: {
-    fontSize: 12,
-    color: '#94A3B8',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    color: AppColors.textMuted,
     marginTop: 2,
   },
   itemQty: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.text,
   },
   overdueText: {
-    color: '#DC2626',
-    fontWeight: '700',
+    color: AppColors.red,
+    fontWeight: AppTypography.weight.bold,
   },
   returnedText: {
-    color: '#16A34A',
-    fontWeight: '600',
+    color: AppColors.green,
+    fontWeight: AppTypography.weight.semibold,
   },
   remarksText: {
-    fontSize: 13,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
     color: '#334155',
-    lineHeight: 20,
-  },
-  actionBtn: {
-    backgroundColor: '#0F172A',
-    borderRadius: 8,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  actionBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
+    lineHeight: AppTypography.lineHeight.body,
   },
   center: {
     flex: 1,
@@ -442,30 +362,24 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
-    fontSize: 14,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.textSecondary,
   },
   errorTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.detailTitle,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.text,
     marginTop: 12,
     marginBottom: 4,
   },
   errorSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.textSecondary,
     textAlign: 'center',
     marginBottom: 16,
   },
-  retryBtn: {
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 6,
-  },
-  retryBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
+  retryBtn: { marginTop: 20 },
 });

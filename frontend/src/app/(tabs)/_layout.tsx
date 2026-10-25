@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,11 +34,11 @@ export default function TabLayout() {
         headerShown: false,
         tabBarLabelPosition: 'below-icon',
         tabBarActiveTintColor: AppColors.navy,
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarInactiveTintColor: AppColors.textMuted,
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: AppColors.white,
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
+          borderTopColor: AppColors.border,
           height: 'auto',
           minHeight: tabMinHeight,
           flexShrink: 0,
@@ -50,9 +51,10 @@ export default function TabLayout() {
           alignItems: 'center',
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
-          lineHeight: 16,
+          fontFamily: AppTypography.fontFamily,
+          fontSize: AppTypography.size.chip,
+          fontWeight: AppTypography.weight.medium,
+          lineHeight: AppTypography.lineHeight.small,
           maxWidth: '100%',
           flexShrink: 0,
           marginTop: 2,

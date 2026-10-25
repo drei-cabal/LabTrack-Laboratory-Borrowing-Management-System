@@ -1,3 +1,4 @@
+import { AppTypography } from '../../constants/typography';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
@@ -8,8 +9,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Keyboard,
-  TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -18,6 +17,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
 import { AppColors } from '../../constants/colors';
+import { EmptyState } from '../../components/ui/EmptyState';
+import { Button } from '../../components/ui/Button';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { recordService } from '../../services/recordService';
 import { ROUTES } from '../../routing/routes';
 import { formatDateTimeDisplay, getTodayIso } from '../../utils/date';
@@ -198,38 +201,13 @@ export default function ReturnItemScreen() {
 
   const isButtonDisabled = !selectedTxCode || selectedItemIds.size === 0 || submitting;
 
-  const renderBadge = (status: TransactionSummary['status']) => {
-    let bg = '#DBEAFE';
-    let text = '#2563EB';
-    let label = '• Borrowed';
-
-    if (status === 'overdue') {
-      bg = '#FEE2E2';
-      text = '#DC2626';
-      label = '• Overdue';
-    }
-
-    return (
-      <View style={[styles.badge, { backgroundColor: bg }]}>
-        <Text style={[styles.badgeText, { color: text }]}>{label}</Text>
-      </View>
-    );
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#0F172A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Return Item</Text>
-          <View style={{ width: 40 }} />
-        </View>
+        <ScreenHeader variant="detail" title="Return Item" onBack={handleBackPress} />
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -239,11 +217,11 @@ export default function ReturnItemScreen() {
           <Text style={styles.sectionHeading}>Find Transaction</Text>
 
           <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
+            <Ionicons name="search-outline" size={18} color={AppColors.textMuted} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               placeholder="Borrower name or transaction ID..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={AppColors.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoCapitalize="none"
@@ -251,7 +229,7 @@ export default function ReturnItemScreen() {
             />
             {searchQuery.length > 0 && (
               <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color="#94A3B8" />
+                <Ionicons name="close-circle" size={18} color={AppColors.textMuted} />
               </TouchableOpacity>
             )}
           </View>
@@ -262,9 +240,7 @@ export default function ReturnItemScreen() {
               <Text style={styles.loadingText}>Loading active loans...</Text>
             </View>
           ) : filteredTransactions.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No active borrow transactions found.</Text>
-            </View>
+            <EmptyState message="No active borrow transactions found." style={styles.emptyContainer} />
           ) : (
             <View style={styles.transactionList}>
               {filteredTransactions.map((tx) => {
@@ -288,7 +264,7 @@ export default function ReturnItemScreen() {
                       <Text style={styles.txBorrower}>{tx.borrower_name}</Text>
                       <Text style={styles.txCode}>{tx.transaction_code}</Text>
                     </View>
-                    {renderBadge(tx.status)}
+                    <StatusBadge status={tx.status} />
                   </TouchableOpacity>
                 );
               })}
@@ -324,7 +300,7 @@ export default function ReturnItemScreen() {
                     >
                       <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
                         {isChecked && (
-                          <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                          <Ionicons name="checkmark" size={14} color={AppColors.white} />
                         )}
                       </View>
                       <Text style={styles.itemTitle}>{item.equipment_name}</Text>
@@ -345,7 +321,7 @@ export default function ReturnItemScreen() {
                 value={dateTimeReturned}
                 onChangeText={setDateTimeReturned}
                 placeholder="e.g. Sep 18, 2026 — 14:32"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={AppColors.textMuted}
               />
             </View>
           </View>
@@ -359,7 +335,7 @@ export default function ReturnItemScreen() {
                 value={remarks}
                 onChangeText={setRemarks}
                 placeholder="All units returned in good working condition."
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={AppColors.textMuted}
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
@@ -373,7 +349,7 @@ export default function ReturnItemScreen() {
               <Ionicons
                 name={selectedItemIds.size > 0 ? 'checkmark-circle' : 'alert-circle'}
                 size={16}
-                color={selectedItemIds.size > 0 ? '#16A34A' : '#EAB308'}
+                color={selectedItemIds.size > 0 ? AppColors.green : '#EAB308'}
               />
               <Text style={styles.statusHintText}>
                 {selectedItemIds.size > 0
@@ -384,18 +360,13 @@ export default function ReturnItemScreen() {
           )}
 
           {/* Bottom Action Button */}
-          <TouchableOpacity
-            style={[styles.confirmBtn, isButtonDisabled && styles.confirmBtnDisabled]}
-            activeOpacity={0.85}
+          <Button
+            title="Confirm Return"
             disabled={isButtonDisabled}
+            loading={submitting}
             onPress={handleConfirmReturn}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.confirmBtnText}>Confirm Return</Text>
-            )}
-          </TouchableOpacity>
+            style={styles.confirmBtn}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -405,36 +376,17 @@ export default function ReturnItemScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    backgroundColor: AppColors.white,
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   sectionHeading: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.text,
     marginBottom: 8,
   },
   sectionHeaderRow: {
@@ -444,9 +396,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionHeadingUpper: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.textSecondary,
     letterSpacing: 0.8,
   },
   toggleAllBtn: {
@@ -454,25 +407,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   toggleAllText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    fontWeight: AppTypography.weight.semibold,
     color: AppColors.navy,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingHorizontal: 12,
     height: 42,
     marginBottom: 12,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.text,
   },
   transactionList: {
     marginBottom: 16,
@@ -481,15 +436,15 @@ const styles = StyleSheet.create({
   txCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 12,
   },
   txCardSelected: {
-    borderColor: '#0F172A',
-    backgroundColor: '#F8FAFC',
+    borderColor: AppColors.text,
+    backgroundColor: AppColors.background,
   },
   radioContainer: {
     marginRight: 10,
@@ -504,44 +459,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioCircleSelected: {
-    borderColor: '#0F172A',
+    borderColor: AppColors.text,
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#0F172A',
+    backgroundColor: AppColors.text,
   },
   txInfo: {
     flex: 1,
   },
   txBorrower: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.text,
   },
   txCode: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    color: AppColors.textMuted,
     marginTop: 1,
-  },
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '600',
   },
   sectionBlock: {
     marginBottom: 18,
   },
   itemsCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     padding: 14,
     gap: 12,
   },
@@ -560,45 +508,50 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   checkboxChecked: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
+    backgroundColor: AppColors.text,
+    borderColor: AppColors.text,
   },
   itemTitle: {
     flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.semibold,
+    color: AppColors.text,
   },
   itemQty: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.textSecondary,
   },
   fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    fontWeight: AppTypography.weight.semibold,
+    color: AppColors.text,
     marginBottom: 6,
   },
   inputContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingHorizontal: 12,
   },
   textInput: {
     height: 44,
-    fontSize: 14,
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.text,
   },
   textAreaContainer: {
     paddingVertical: 8,
   },
   textArea: {
     minHeight: 70,
-    fontSize: 14,
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.text,
   },
   statusHint: {
     flexDirection: 'row',
@@ -608,41 +561,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   statusHintText: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '500',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    color: AppColors.textSecondary,
+    fontWeight: AppTypography.weight.medium,
   },
-  confirmBtn: {
-    backgroundColor: '#0F172A',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  confirmBtnDisabled: {
-    opacity: 0.45,
-  },
-  confirmBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
-  },
+  confirmBtn: { marginTop: 4 },
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
   },
   loadingText: {
     marginTop: 8,
-    fontSize: 13,
-    color: '#64748B',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    color: AppColors.textSecondary,
   },
   emptyContainer: {
     padding: 20,
     alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#94A3B8',
   },
 });

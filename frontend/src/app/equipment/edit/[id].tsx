@@ -125,8 +125,8 @@ export default function EditEquipmentScreen() {
 
   if (fetching) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScreenHeader title="Edit Equipment" showBack />
+      <SafeAreaView style={styles.safeArea} edges={[]}>
+        <ScreenHeader title="Edit Equipment" variant="detail" />
         <View style={styles.center}>
           <ActivityIndicator size="large" color={AppColors.navy} />
         </View>
@@ -135,8 +135,8 @@ export default function EditEquipmentScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ScreenHeader title="Edit Equipment" showBack />
+    <SafeAreaView style={styles.safeArea} edges={[]}>
+      <ScreenHeader title="Edit Equipment" variant="detail" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
