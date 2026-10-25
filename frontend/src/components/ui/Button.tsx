@@ -120,7 +120,7 @@ export function Button({
       style={({ pressed }) => getContainerStyle(pressed)}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled: disabled || loading }}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
     >
       {loading ? (
         <ActivityIndicator
@@ -139,7 +139,8 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    height: 46,
+    minHeight: 46,
+    paddingVertical: 10,
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -151,12 +152,14 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sizeSm: {
-    height: 34,
+    minHeight: 34,
+    paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 6,
   },
   sizeLg: {
-    height: 52,
+    minHeight: 52,
+    paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
@@ -187,6 +190,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   baseText: {
+    flexShrink: 1,
+    textAlign: 'center',
     lineHeight: AppTypography.lineHeight.button,
     fontFamily: AppTypography.fontFamily,
     fontSize: AppTypography.size.button,
