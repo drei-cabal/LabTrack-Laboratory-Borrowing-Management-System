@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   Pressable,
   StyleSheet,
@@ -22,23 +23,6 @@ import { authService } from '../services/authService';
 import '../login-focus.css';
 
 const navy = AppColors.navy;
-
-function LabMark() {
-  return (
-    <View style={styles.mark}>
-      {/* Clipboard Icon Body */}
-      <View style={styles.clipboard}>
-        <View style={styles.clipboardClip} />
-        <View style={styles.clipboardLine} />
-        <View style={styles.clipboardLine} />
-      </View>
-      {/* Check/Close Badge */}
-      <View style={styles.checkBadge}>
-        <Ionicons name="close" size={8} color={AppColors.white} />
-      </View>
-    </View>
-  );
-}
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -90,8 +74,12 @@ export default function LoginScreen() {
         >
           {/* Brand section */}
           <View style={styles.brandSection}>
-            <LabMark />
-            <Text style={styles.brandTitle}>LabTrack</Text>
+            <Image
+              source={require('../../assets/branding/labtrack-logo.png')}
+              style={styles.brandLogo}
+              resizeMode="contain"
+              accessibilityLabel="LabTrack logo"
+            />
             <Text style={styles.brandSubtitle}>UMTC Engineering Laboratory</Text>
           </View>
 
@@ -194,59 +182,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 32,
   },
-  mark: {
-    width: 52,
-    height: 52,
-    borderRadius: 8,
-    backgroundColor: navy,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  clipboard: {
-    width: 22,
-    height: 22,
-    borderRadius: 3,
-    borderWidth: 1.5,
-    borderColor: AppColors.white,
-    paddingTop: 6,
-    alignItems: 'center',
-    gap: 3,
-  },
-  clipboardClip: {
-    position: 'absolute',
-    top: -5,
-    width: 10,
-    height: 5,
-    borderWidth: 1.5,
-    borderColor: AppColors.white,
-    borderRadius: 2,
-    backgroundColor: navy,
-  },
-  clipboardLine: {
-    width: 12,
-    height: 1.25,
-    backgroundColor: AppColors.white,
-  },
-  checkBadge: {
-    position: 'absolute',
-    right: 11,
-    bottom: 11,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: navy,
-    borderWidth: 1.25,
-    borderColor: AppColors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandTitle: {
-    color: navy,
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.title,
-    fontWeight: AppTypography.weight.bold,
-    lineHeight: 28,
+  brandLogo: {
+    width: 160,
+    height: 160,
   },
   brandSubtitle: {
     color: '#59708F',
