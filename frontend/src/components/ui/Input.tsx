@@ -4,6 +4,7 @@ import {
   View,
   Text,
   TextInput,
+  Platform,
   StyleSheet,
   TextInputProps,
   StyleProp,
@@ -24,8 +25,12 @@ export function Input({
   containerStyle,
   multiline = false,
   style,
+  onFocus,
+  onBlur,
   ...rest
 }: InputProps) {
+  const [focused, setFocused] = React.useState(false);
+
   return (
     <View style={[styles.container, containerStyle]}>
       <Text style={styles.label}>{label}</Text>
@@ -33,6 +38,7 @@ export function Input({
         style={[
           styles.inputWrapper,
           multiline && styles.multilineWrapper,
+          focused && styles.inputFocused,
           error ? styles.inputError : null,
         ]}
       >
@@ -41,10 +47,19 @@ export function Input({
           style={[styles.input, multiline && styles.multilineInput, style]}
           multiline={multiline}
           textAlignVertical={multiline ? 'top' : 'center'}
+          accessibilityLabel={label}
           {...rest}
+          onFocus={(event) => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
         />
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? <Text style={styles.errorText} accessibilityLiveRegion="polite">{error}</Text> : null}
     </View>
   );
 }
@@ -79,9 +94,14 @@ const styles = StyleSheet.create({
     fontSize: AppTypography.size.body,
     color: AppColors.text,
     padding: 0,
+    ...Platform.select({ web: { outlineWidth: 0 } }),
   },
   multilineInput: {
     minHeight: 86,
+  },
+  inputFocused: {
+    borderColor: AppColors.navy,
+    backgroundColor: AppColors.white,
   },
   inputError: {
     borderColor: AppColors.red,
