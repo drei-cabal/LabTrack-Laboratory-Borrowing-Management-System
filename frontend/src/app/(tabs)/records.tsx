@@ -1,3 +1,4 @@
+import { SearchBar } from '../../components/ui/SearchBar';
 import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React, { useState, useRef, useMemo } from 'react';
@@ -12,7 +13,6 @@ import {
   RefreshControl,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { AppColors } from '../../constants/colors';
@@ -123,6 +123,7 @@ export default function RecordsScreen() {
         <ScreenHeader
           variant="tab"
           title="Records"
+          icon="documents-outline"
           right={
             <ScreenHeaderIconAction
               icon="search-outline"
@@ -141,24 +142,14 @@ export default function RecordsScreen() {
       }
     >
       {/* Search Input Bar */}
-      <View style={[tabPageStyles.searchFrame, styles.searchContainer]}>
-        <Ionicons name="search-outline" size={18} color={AppColors.textMuted} style={tabPageStyles.searchIcon} />
-        <TextInput
-          ref={searchInputRef}
-          style={styles.searchInput}
-          placeholder="Search by borrower name, ID, or item..."
-          placeholderTextColor="#94A3B8"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          clearButtonMode="while-editing"
-          autoCapitalize="none"
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={18} color={AppColors.textMuted} />
-          </TouchableOpacity>
-        )}
-      </View>
+      <SearchBar
+        ref={searchInputRef}
+        containerStyle={[tabPageStyles.searchFrame, styles.searchContainer]}
+        style={styles.searchInput}
+        placeholder="Search by borrower name, ID, or item..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
       {/* Filter Tabs */}
       <FilterChips options={FILTER_TABS} selected={filter} onSelect={setFilter} />
@@ -214,9 +205,6 @@ const styles = StyleSheet.create({
     fontSize: AppTypography.size.body,
     color: AppColors.text,
     height: '100%',
-  },
-  clearBtn: {
-    padding: 4,
   },
   listEmptyContent: {
     flexGrow: 1,

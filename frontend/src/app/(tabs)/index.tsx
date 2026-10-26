@@ -126,6 +126,7 @@ export default function HomeScreen() {
         <ScreenHeader
           variant="tab"
           tone="navy"
+          icon="flask-outline"
           title={welcomeName}
           subtitle="WELCOME BACK"
           right={

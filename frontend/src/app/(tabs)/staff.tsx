@@ -1,3 +1,4 @@
+import { SearchBar } from '../../components/ui/SearchBar';
 import { screenStyles } from '../../components/ui/ScreenStyles';
 import React, { useState, useMemo } from 'react';
 import { AppTypography } from '../../constants/typography';
@@ -9,7 +10,6 @@ import {
   Pressable,
   RefreshControl,
   ActivityIndicator,
-  TextInput,
   Platform,
 } from 'react-native';
 import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
@@ -153,29 +153,20 @@ export default function StaffScreen() {
         <ScreenHeader
           variant="tab"
           title="Manage Staff"
+          icon="people-outline"
           subtitle={`${staff.length} registered laboratory personnel`}
           right={<ScreenHeaderTextAction icon="add" label="Add Staff" onPress={handleAddPress} />}
         />
       }
     >
       {/* Search Bar */}
-      <View style={[tabPageStyles.searchFrame, styles.searchBar]}>
-        <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by name, email, or username..."
-          placeholderTextColor="#94A3B8"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          clearButtonMode="while-editing"
-          autoCapitalize="none"
-        />
-        {searchQuery.length > 0 && (
-          <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={18} color="#94A3B8" />
-          </Pressable>
-        )}
-      </View>
+      <SearchBar
+        containerStyle={[tabPageStyles.searchFrame, styles.searchBar]}
+        style={styles.searchInput}
+        placeholder="Search by name, email, or username..."
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
 
       {/* Main Content */}
       {loading && staff.length === 0 ? (

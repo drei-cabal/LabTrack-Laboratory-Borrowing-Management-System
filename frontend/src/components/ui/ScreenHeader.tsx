@@ -24,7 +24,7 @@ const HEADER = {
   iconActionSize: 38,
   actionIconSize: 20,
   textActionIconSize: 18,
-  actionRadius: 8,
+  actionRadius: 12,
   actionHorizontalPadding: 14,
 } as const;
 
@@ -33,6 +33,7 @@ type HeaderIcon = React.ComponentProps<typeof Ionicons>['name'];
 export interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
+  icon?: HeaderIcon;
   tone?: 'light' | 'navy';
   onBack?: () => void;
   right?: React.ReactNode;
@@ -40,7 +41,7 @@ export interface ScreenHeaderProps {
   children?: React.ReactNode;
 }
 
-export function ScreenHeader({ title, subtitle, tone = 'light', onBack, right, variant, children }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, icon, tone = 'light', onBack, right, variant, children }: ScreenHeaderProps) {
   const router = useRouter();
   const isFocused = useIsFocused();
   const { top, left, right: rightInset } = useSafeAreaInsets();
@@ -74,13 +75,18 @@ export function ScreenHeader({ title, subtitle, tone = 'light', onBack, right, v
       ]}
     >
       {isFocused ? <StatusBar style={isNavy ? 'light' : 'dark'} /> : null}
+      <View pointerEvents="none" style={styles.decoration} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        <View style={[styles.outerRing, isNavy && styles.navyRing]} />
+        <View style={[styles.innerRing, isNavy && styles.navyRing]} />
+        <View style={[styles.accent, isNavy && styles.navyAccent]} />
+      </View>
       <View style={styles.contentRow}>
         {variant === 'banner' ? children : variant === 'detail' ? (
           <>
             <Pressable
               onPress={handleBack}
               hitSlop={HEADER.backHitSlop}
-              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.backButton, isNavy && styles.navyIconTile, pressed && styles.pressed]}
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
@@ -91,6 +97,11 @@ export function ScreenHeader({ title, subtitle, tone = 'light', onBack, right, v
           </>
         ) : (
           <>
+            {icon ? (
+              <View style={[styles.iconTile, isNavy && styles.navyIconTile]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <Ionicons name={icon} size={22} color={isNavy ? AppColors.white : AppColors.navy} />
+              </View>
+            ) : null}
             <View style={styles.titleBlock}>
               <Text style={[styles.tabTitle, isNavy && styles.navyTitle]} numberOfLines={1}>
                 {title}
@@ -157,6 +168,67 @@ const styles = StyleSheet.create({
     backgroundColor: AppColors.white,
     borderBottomWidth: HEADER.borderWidth,
     borderBottomColor: AppColors.headerBorder,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    paddingBottom: 10,
+  },
+  decoration: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    overflow: 'hidden',
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+  },
+  outerRing: {
+    position: 'absolute',
+    width: 144,
+    height: 144,
+    borderRadius: 72,
+    borderWidth: 1,
+    borderColor: AppColors.borrowedBg,
+    right: -32,
+    top: -40,
+  },
+  innerRing: {
+    position: 'absolute',
+    width: 104,
+    height: 104,
+    borderRadius: 52,
+    borderWidth: 1,
+    borderColor: AppColors.borrowedBg,
+    right: -12,
+    top: -20,
+  },
+  navyRing: {
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  accent: {
+    position: 'absolute',
+    bottom: 0,
+    left: HEADER.horizontalPadding,
+    width: 32,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: AppColors.navy,
+  },
+  navyAccent: {
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  iconTile: {
+    width: 40,
+    height: 40,
+    borderRadius: 13,
+    backgroundColor: AppColors.borrowedBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  navyIconTile: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   contentRow: {
     minHeight: HEADER.minHeight,
@@ -187,7 +259,8 @@ const styles = StyleSheet.create({
     fontFamily: AppTypography.fontFamily,
     fontSize: HEADER.tabTitleSize,
     fontWeight: AppTypography.weight.bold,
-    color: AppColors.text,
+    color: AppColors.navy,
+    letterSpacing: -0.4,
   },
   subtitle: {
     fontFamily: AppTypography.fontFamily,
@@ -208,6 +281,10 @@ const styles = StyleSheet.create({
     height: HEADER.backSize,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: AppColors.headerActionBorder,
+    backgroundColor: AppColors.headerActionBackground,
   },
   right: {
     marginLeft: HEADER.rightGap,

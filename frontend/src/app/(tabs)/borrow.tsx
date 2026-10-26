@@ -1,724 +1,245 @@
-import { screenStyles } from '../../components/ui/ScreenStyles';
-import { AppTypography } from '../../constants/typography';
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Modal,
-  ScrollView,
-} from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-
 import { AppColors } from '../../constants/colors';
-import { useBorrowRecords } from '../../hooks/useBorrowRecords';
-import { StatusBadge } from '../../components/ui/StatusBadge';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { Fab } from '../../components/ui/Fab';
-import { ScreenHeader, ScreenHeaderTextAction } from '../../components/ui/ScreenHeader';
-import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
-import { FilterChips } from '../../components/ui/FilterChips';
+import { AppTypography } from '../../constants/typography';
+import { Button } from '../../components/ui/Button';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
+import { TabPageLayout } from '../../components/ui/TabPageLayout';
 import { ROUTES } from '../../routing/routes';
-import { BorrowRecordWithEquipment } from '../../types';
 import { useGuardedPress } from '../../utils/guards';
 
-type FilterTab = 'all' | 'borrowed' | 'overdue' | 'returned';
-
-const FILTER_OPTIONS: readonly { key: FilterTab; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'borrowed', label: 'Borrowed' },
-  { key: 'overdue', label: 'Overdue' },
-  { key: 'returned', label: 'Returned' },
-];
-
-// Equipment condition options matching the physical borrower's slip
-const CONDITION_OPTIONS = [
-  { value: '1', label: '1 — Good Condition', color: '#16A34A', icon: 'checkmark-circle-outline' as const },
-  { value: '2', label: '2 — For Replacement', color: '#D97706', icon: 'refresh-circle-outline' as const },
-  { value: '3', label: '3 — For Repair', color: '#DC2626', icon: 'construct-outline' as const },
-  { value: '4', label: '4 — Consumable', color: '#7C3AED', icon: 'flask-outline' as const },
-];
+const TRANSACTION_STEPS = [
+  { icon: 'person-outline', label: 'Borrower' },
+  { icon: 'cube-outline', label: 'Equipment' },
+  { icon: 'calendar-outline', label: 'Schedule' },
+  { icon: 'checkmark-done-outline', label: 'Review' },
+] as const;
 
 export default function BorrowScreen() {
   const router = useRouter();
-  const [filter, setFilter] = useState<FilterTab>('all');
-  const { records, loading, refresh, returnItem } = useBorrowRecords(filter);
-  const [returningId, setReturningId] = useState<string | null>(null);
-
-  // Return Modal state
-  const [returnModalItem, setReturnModalItem] = useState<BorrowRecordWithEquipment | null>(null);
-  const [selectedCondition, setSelectedCondition] = useState<string>('1');
-  const [returnNotes, setReturnNotes] = useState('');
-  const [returnError, setReturnError] = useState<string | null>(null);
-
-  // Success modal state
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successEquipmentName, setSuccessEquipmentName] = useState('');
-
   const handleNewTransaction = useGuardedPress(() => {
-    router.push(ROUTES.BORROW_NEW as any);
+    router.push(ROUTES.BORROW_NEW);
   }, 500);
-
-  const openReturnModal = (item: BorrowRecordWithEquipment) => {
-    setReturnModalItem(item);
-    setSelectedCondition('1');
-    setReturnNotes('');
-    setReturnError(null);
-  };
-
-  const closeReturnModal = () => {
-    if (returningId) return; // prevent closing while in-flight
-    setReturnModalItem(null);
-    setReturnError(null);
-  };
-
-  const handleConfirmReturn = async () => {
-    if (!returnModalItem) return;
-    setReturningId(returnModalItem.id);
-    setReturnError(null);
-
-    const conditionLabel = CONDITION_OPTIONS.find((c) => c.value === selectedCondition)?.label ?? '';
-    const remarks = [
-      `Condition: ${conditionLabel}`,
-      returnNotes.trim() ? `Notes: ${returnNotes.trim()}` : '',
-    ]
-      .filter(Boolean)
-      .join(' | ');
-
-    const success = await returnItem(returnModalItem.id, remarks);
-    setReturningId(null);
-
-    if (success) {
-      setSuccessEquipmentName(returnModalItem.equipment_name);
-      setReturnModalItem(null);
-      setShowSuccessModal(true);
-    } else {
-      setReturnError('Failed to mark item as returned. Please try again.');
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const renderItem = ({ item }: { item: BorrowRecordWithEquipment }) => {
-    const isReturned = item.status === 'returned';
-    const isProcessing = returningId === item.id;
-
-    return (
-      <View style={styles.card}>
-        {/* Top Row: Borrower & Status */}
-        <View style={styles.cardHeader}>
-          <View style={styles.borrowerInfo}>
-            <Text style={styles.borrowerName}>{item.borrower_name}</Text>
-            <Text style={styles.borrowerId}>{item.borrower_id}</Text>
-          </View>
-          <StatusBadge status={item.status} />
-        </View>
-
-        {/* Equipment Name & Details */}
-        <View style={styles.equipmentRow}>
-          <Ionicons name="cube-outline" size={16} color={AppColors.navy} />
-          <Text style={styles.equipmentName}>
-            {item.equipment_name}
-            {item.quantity && item.quantity > 1 ? ` (×${item.quantity})` : ''}
-          </Text>
-          {item.equipment_product_id ? (
-            <View style={styles.tagBadge}>
-              <Text style={styles.tagText}>{item.equipment_product_id}</Text>
-            </View>
-          ) : null}
-        </View>
-
-        {/* Purpose if present */}
-        {item.purpose ? (
-          <Text style={styles.purposeText} numberOfLines={2}>
-            Purpose: {item.purpose}
-          </Text>
-        ) : null}
-
-        {/* Dates and Action */}
-        <View style={styles.cardFooter}>
-          <View style={styles.dateInfo}>
-            <Text style={styles.dateLabel}>
-              Borrowed: <Text style={styles.dateValue}>{formatDate(item.borrow_date)}</Text>
-            </Text>
-            <Text style={styles.dateLabel}>
-              Due: <Text style={styles.dueDateValue}>{formatDate(item.due_date)}</Text>
-            </Text>
-          </View>
-
-          {!isReturned && (
-            <Pressable
-              onPress={() => openReturnModal(item)}
-              disabled={isProcessing}
-              style={({ pressed }) => [
-                styles.returnBtn,
-                pressed && styles.returnBtnPressed,
-                isProcessing && styles.returnBtnDisabled,
-              ]}
-            >
-              {isProcessing ? (
-                <ActivityIndicator size="small" color={AppColors.navy} />
-              ) : (
-                <>
-                  <Ionicons name="return-down-back-outline" size={14} color={AppColors.navy} />
-                  <Text style={styles.returnBtnText}>Return</Text>
-                </>
-              )}
-            </Pressable>
-          )}
-        </View>
-      </View>
-    );
-  };
 
   return (
     <TabPageLayout
       backgroundColor={AppColors.background}
-      header={
-        <ScreenHeader
-          variant="tab"
-          title="Borrowing"
-          right={
-            <ScreenHeaderTextAction
-              icon="add"
-              label="New Loan"
-              accessibilityLabel="New Transaction"
-              onPress={handleNewTransaction}
-            />
-          }
-        />
-      }
-      floatingAction={
-        <Fab
-          icon="add"
-          label="New Transaction"
-          onPress={handleNewTransaction}
-        />
-      }
+      header={<ScreenHeader variant="tab" title="Borrowing" icon="swap-horizontal-outline" />}
     >
-      {/* Filter Tabs */}
-      <Text style={styles.subtitle}>Transactions & Active Loans</Text>
-      <FilterChips options={FILTER_OPTIONS} selected={filter} onSelect={setFilter} />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.card}>
+          <View style={styles.eyebrow}>
+            <View style={styles.eyebrowDot} />
+            <Text style={styles.eyebrowText}>NEW TRANSACTION</Text>
+          </View>
 
-      {/* List Content */}
-      {loading && records.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={AppColors.navy} />
-        </View>
-      ) : records.length === 0 ? (
-        <EmptyState
-          message="No borrow transactions found for the selected filter."
-          actionText="Create New Transaction"
-          onAction={handleNewTransaction}
-        />
-      ) : (
-        <FlatList
-          data={records}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={[tabPageStyles.listAfterFilters, styles.listContent]}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={AppColors.navy} />
-          }
-        />
-      )}
-
-      <Fab
-        icon="add"
-        label="New Transaction"
-        onPress={handleNewTransaction}
-      />
-
-      {/* ─── Return Equipment Modal ─────────────────────────────────────────────── */}
-      <Modal
-        visible={!!returnModalItem}
-        transparent
-        animationType="fade"
-        onRequestClose={closeReturnModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            {/* Modal Header */}
-            <View style={styles.modalHeader}>
-              <Ionicons name="return-down-back-outline" size={20} color={AppColors.navy} />
-              <Text style={styles.modalTitle}>Return Equipment</Text>
+          <View style={styles.illustration} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            <View style={styles.halo} />
+            <View style={styles.slipBack} />
+            <View style={styles.slip}>
+              <View style={styles.slipHeading}>
+                <Ionicons name="flask" size={20} color={AppColors.navy} />
+                <View style={styles.slipTitleLine} />
+              </View>
+              <View style={styles.slipDivider} />
+              <View style={styles.slipRow}>
+                <Ionicons name="person-outline" size={14} color={AppColors.textMuted} />
+                <View style={styles.slipLine} />
+              </View>
+              <View style={styles.slipRow}>
+                <Ionicons name="cube-outline" size={14} color={AppColors.textMuted} />
+                <View style={[styles.slipLine, styles.shortLine]} />
+              </View>
+              <View style={styles.slipRow}>
+                <Ionicons name="calendar-outline" size={14} color={AppColors.textMuted} />
+                <View style={styles.slipLine} />
+              </View>
             </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Item summary */}
-              {returnModalItem && (
-                <View style={styles.modalItemSummary}>
-                  <Text style={styles.modalItemName} numberOfLines={2}>
-                    {returnModalItem.equipment_name}
-                    {returnModalItem.quantity && returnModalItem.quantity > 1
-                      ? ` (×${returnModalItem.quantity})`
-                      : ''}
-                  </Text>
-                  <Text style={styles.modalItemSub}>
-                    Borrowed by: <Text style={{ fontWeight: '700' }}>{returnModalItem.borrower_name}</Text>
-                  </Text>
-                  <Text style={styles.modalItemSub}>
-                    Due: <Text style={{ fontWeight: '700', color: AppColors.navy }}>{formatDate(returnModalItem.due_date)}</Text>
-                  </Text>
-                </View>
-              )}
-
-              {/* Condition selector */}
-              <Text style={styles.modalSectionLabel}>
-                <Ionicons name="clipboard-outline" size={13} /> Equipment Condition on Return
-              </Text>
-              <View style={styles.conditionList}>
-                {CONDITION_OPTIONS.map((opt) => {
-                  const isSelected = selectedCondition === opt.value;
-                  return (
-                    <Pressable
-                      key={opt.value}
-                      onPress={() => setSelectedCondition(opt.value)}
-                      style={[
-                        styles.conditionOption,
-                        isSelected && { borderColor: opt.color, backgroundColor: opt.color + '12' },
-                      ]}
-                    >
-                      <View style={[styles.conditionRadio, isSelected && { borderColor: opt.color }]}>
-                        {isSelected && <View style={[styles.conditionRadioInner, { backgroundColor: opt.color }]} />}
-                      </View>
-                      <Ionicons name={opt.icon} size={16} color={isSelected ? opt.color : '#94A3B8'} />
-                      <Text style={[styles.conditionLabel, isSelected && { color: opt.color, fontWeight: '700' }]}>
-                        {opt.label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-
-              {/* Optional notes */}
-              <Text style={styles.modalSectionLabel}>Return Remarks (optional)</Text>
-              <View style={styles.notesInputBox}>
-                <Ionicons name="chatbubble-ellipses-outline" size={16} color="#94A3B8" style={{ marginTop: 2 }} />
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={0}
-                  color="transparent"
-                />
-              </View>
-              {/* Native TextInput for notes */}
-              <View style={styles.notesWrapper}>
-                <Ionicons name="chatbubble-ellipses-outline" size={16} color="#94A3B8" />
-                <View style={styles.notesTextArea}>
-                  {/* Inline textarea using TextInput style */}
-                  <Text
-                    style={styles.notesPlaceholder}
-                    onPress={() => {}} // clickable area hint
-                  >
-                    {returnNotes.length === 0 ? 'e.g. Minor scratches on casing, cable intact...' : returnNotes}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Error */}
-              {returnError && (
-                <View style={styles.errorBox}>
-                  <Ionicons name="alert-circle-outline" size={15} color="#DC2626" />
-                  <Text style={styles.errorText}>{returnError}</Text>
-                </View>
-              )}
-            </ScrollView>
-
-            {/* Action Buttons */}
-            <View style={styles.modalActions}>
-              <Pressable
-                onPress={closeReturnModal}
-                disabled={!!returningId}
-                style={({ pressed }) => [styles.modalCancelBtn, pressed && styles.btnPressed]}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </Pressable>
-
-              <Pressable
-                onPress={handleConfirmReturn}
-                disabled={!!returningId}
-                style={({ pressed }) => [
-                  styles.modalConfirmBtn,
-                  pressed && styles.btnPressed,
-                  !!returningId && styles.modalConfirmBtnDisabled,
-                ]}
-              >
-                {returningId ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-circle-outline" size={16} color="#FFFFFF" />
-                    <Text style={styles.modalConfirmText}>Confirm Return</Text>
-                  </>
-                )}
-              </Pressable>
+            <View style={styles.equipmentBadge}>
+              <Ionicons name="cube-outline" size={26} color={AppColors.navy} />
+            </View>
+            <View style={styles.addBadge}>
+              <Ionicons name="add" size={24} color={AppColors.white} />
             </View>
           </View>
-        </View>
-      </Modal>
 
-      {/* ─── Return Success Modal ───────────────────────────────────────────────── */}
-      <Modal
-        visible={showSuccessModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowSuccessModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, styles.successCard]}>
-            <View style={styles.successIconWrap}>
-              <Ionicons name="checkmark-circle" size={52} color="#16A34A" />
+          <Text style={styles.title}>Ready for the next lab?</Text>
+          <Text style={styles.description}>
+            Keep equipment, borrowers, and return dates together in one guided form.
+          </Text>
+
+          <View style={styles.process}>
+            <Text style={styles.processTitle}>FOUR STEPS. ONE ORGANIZED LOAN.</Text>
+            <View style={styles.steps}>
+              {TRANSACTION_STEPS.map((step) => (
+                <View key={step.label} style={styles.step}>
+                  <View style={styles.stepIcon}>
+                    <Ionicons name={step.icon} size={18} color={AppColors.navy} />
+                  </View>
+                  <Text style={styles.stepLabel}>{step.label}</Text>
+                </View>
+              ))}
             </View>
-            <Text style={styles.successTitle}>Item Returned</Text>
-            <Text style={styles.successMsg}>
-              <Text style={{ fontWeight: '700' }}>{successEquipmentName}</Text> has been successfully
-              marked as returned and the inventory has been updated.
-            </Text>
-            <Pressable
-              onPress={() => setShowSuccessModal(false)}
-              style={({ pressed }) => [styles.successDoneBtn, pressed && styles.btnPressed]}
-            >
-              <Text style={styles.successDoneText}>Done</Text>
-            </Pressable>
           </View>
+
+          <Button
+            title="Add Transaction"
+            onPress={handleNewTransaction}
+            size="lg"
+            icon={<Ionicons name="add" size={22} color={AppColors.white} />}
+          />
         </View>
-      </Modal>
+
+        <View style={styles.hint}>
+          <Ionicons name="information-circle-outline" size={17} color={AppColors.textSecondary} />
+          <Text style={styles.hintText}>Have the borrower ID and equipment details ready.</Text>
+        </View>
+      </ScrollView>
     </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  btnPressed: {
-    opacity: 0.75,
-  },
-  subtitle: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.small,
-    color: AppColors.textSecondary,
-  },
-  centerContainer: {
-    flex: 1,
-    alignItems: 'center',
+  content: {
+    flexGrow: 1,
     justifyContent: 'center',
-  },
-  listContent: {
-    gap: 12,
+    padding: 20,
+    paddingTop: 16,
+    paddingBottom: 28,
   },
   card: {
-    ...screenStyles.card,
-    padding: 14,
-    gap: 10,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  borrowerInfo: {
-    flex: 1,
-  },
-  borrowerName: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.bodyStrong,
-    fontWeight: AppTypography.weight.bold,
-    color: AppColors.text,
-  },
-  borrowerId: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.small,
-    color: AppColors.textSecondary,
-    marginTop: 2,
-  },
-  equipmentRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  equipmentName: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.body,
-    fontWeight: AppTypography.weight.semibold,
-    color: AppColors.text,
-  },
-  tagBadge: {
-    backgroundColor: AppColors.border,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4,
-  },
-  tagText: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.chip,
-    fontWeight: AppTypography.weight.bold,
-    color: AppColors.navy,
-  },
-  purposeText: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.small,
-    color: AppColors.textSecondary,
-    lineHeight: AppTypography.lineHeight.small,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: AppColors.border,
-    paddingTop: 10,
-    marginTop: 2,
-  },
-  dateInfo: {
-    gap: 2,
-  },
-  dateLabel: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.chip,
-    color: AppColors.textSecondary,
-  },
-  dateValue: {
-    fontWeight: AppTypography.weight.semibold,
-    color: AppColors.text,
-  },
-  dueDateValue: {
-    fontWeight: '700',
-    color: AppColors.navy,
-  },
-  returnBtn: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: AppColors.white,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: AppColors.navy,
-    borderRadius: 6,
+    borderColor: AppColors.border,
+    padding: 22,
+  },
+  eyebrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    borderRadius: 20,
+    backgroundColor: AppColors.borrowedBg,
   },
-  returnBtnPressed: {
-    backgroundColor: '#F1F5F9',
-  },
-  returnBtnDisabled: {
-    opacity: 0.6,
-  },
-  returnBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
+  eyebrowDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: AppColors.blue },
+  eyebrowText: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.micro,
+    fontWeight: AppTypography.weight.bold,
+    letterSpacing: 1,
     color: AppColors.navy,
   },
-
-  // ─── Modal Styles ─────────────────────────────────────────────────────────────
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+  illustration: { height: 150, alignItems: 'center', justifyContent: 'center', marginVertical: 8 },
+  halo: { position: 'absolute', width: 150, height: 150, borderRadius: 75, backgroundColor: AppColors.borrowedBg },
+  slipBack: {
+    position: 'absolute',
+    width: 112,
+    height: 128,
+    borderRadius: 12,
+    backgroundColor: AppColors.headerActionBorder,
+    transform: [{ rotate: '-12deg' }, { translateX: -8 }],
+  },
+  slip: {
+    width: 112,
+    height: 134,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    backgroundColor: AppColors.white,
+    padding: 14,
+    transform: [{ rotate: '6deg' }],
+  },
+  slipHeading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  slipTitleLine: { flex: 1, height: 5, backgroundColor: AppColors.navy, borderRadius: 3 },
+  slipDivider: { height: 1, backgroundColor: AppColors.border, marginVertical: 10 },
+  slipRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  slipLine: { flex: 1, height: 4, backgroundColor: AppColors.border, borderRadius: 2 },
+  shortLine: { marginRight: 12 },
+  equipmentBadge: {
+    position: 'absolute',
+    left: '16%',
+    bottom: 24,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: AppColors.white,
+    borderWidth: 1,
+    borderColor: AppColors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    transform: [{ rotate: '-10deg' }],
   },
-  modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 460,
-    gap: 16,
-    maxHeight: '90%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 14,
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: AppColors.text,
-  },
-  modalItemSummary: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 12,
-    gap: 4,
-  },
-  modalItemName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: AppColors.text,
-  },
-  modalItemSub: {
-    fontSize: 12,
-    color: AppColors.textSecondary,
-  },
-  modalSectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: AppColors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: 4,
-  },
-  conditionList: {
-    gap: 8,
-    marginTop: 6,
-  },
-  conditionOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#FAFAFA',
-  },
-  conditionRadio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: '#CBD5E1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  conditionRadioInner: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-  },
-  conditionLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: AppColors.text,
-    flex: 1,
-  },
-  notesInputBox: {
-    display: 'none', // hidden — we use notesWrapper instead
-  },
-  notesWrapper: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 6,
-    minHeight: 56,
-    backgroundColor: '#FAFAFA',
-  },
-  notesTextArea: {
-    flex: 1,
-  },
-  notesPlaceholder: {
-    fontSize: 13,
-    color: '#94A3B8',
-    lineHeight: 20,
-  },
-  errorBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FEF2F2',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 4,
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#DC2626',
-    flex: 1,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingTop: 16,
-  },
-  modalCancelBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalCancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: AppColors.textSecondary,
-  },
-  modalConfirmBtn: {
-    flex: 2,
+  addBadge: {
+    position: 'absolute',
+    right: '18%',
+    top: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     backgroundColor: AppColors.navy,
-    borderRadius: 10,
-    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 6,
+    transform: [{ rotate: '10deg' }],
   },
-  modalConfirmBtnDisabled: {
-    opacity: 0.7,
+  title: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.title,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.navy,
+    textAlign: 'center',
+    marginBottom: 10,
   },
-  modalConfirmText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-
-  // ─── Success Modal ────────────────────────────────────────────────────────────
-  successCard: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  successIconWrap: {
-    marginBottom: 8,
-  },
-  successTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#16A34A',
-    marginBottom: 8,
-  },
-  successMsg: {
-    fontSize: 14,
+  description: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    lineHeight: AppTypography.lineHeight.body,
     color: AppColors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 8,
   },
-  successDoneBtn: {
-    backgroundColor: AppColors.navy,
-    borderRadius: 10,
+  process: {
+    marginVertical: 20,
     paddingVertical: 12,
-    paddingHorizontal: 40,
-    marginTop: 8,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: AppColors.headerBorder,
   },
-  successDoneText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
+  processTitle: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.micro,
+    fontWeight: AppTypography.weight.semibold,
+    color: AppColors.textSecondary,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  steps: { flexDirection: 'row' },
+  step: { flex: 1, alignItems: 'center', gap: 6 },
+  stepIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: AppColors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepLabel: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.micro,
+    fontWeight: AppTypography.weight.semibold,
+    color: AppColors.text,
+    textAlign: 'center',
+  },
+  hint: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: 6, marginTop: 18, paddingHorizontal: 10 },
+  hintText: {
+    flexShrink: 1,
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    lineHeight: AppTypography.lineHeight.small,
+    color: AppColors.textSecondary,
   },
 });

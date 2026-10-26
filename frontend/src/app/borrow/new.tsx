@@ -1,3 +1,4 @@
+import { SearchBar } from '../../components/ui/SearchBar';
 import { screenStyles } from '../../components/ui/ScreenStyles';
 import React, { useState, useMemo } from 'react';
 import { AppTypography } from '../../constants/typography';
@@ -12,7 +13,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  TextInput,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -731,22 +731,13 @@ export default function NewBorrowTransactionScreen() {
           {currentStep === 2 && (
             <View style={styles.stepContainer}>
               {/* Search Bar */}
-              <View style={styles.searchBox}>
-                <Ionicons name="search-outline" size={18} color="#64748B" />
-                <TextInput
-                  placeholder="Search equipment by name, brand, or tag..."
-                  placeholderTextColor="#94A3B8"
-                  value={equipmentSearch}
-                  onChangeText={setEquipmentSearch}
-                  style={styles.searchInput}
-                  clearButtonMode="while-editing"
-                />
-                {equipmentSearch.length > 0 && (
-                  <Pressable onPress={() => setEquipmentSearch('')} hitSlop={6}>
-                    <Ionicons name="close-circle" size={16} color="#94A3B8" />
-                  </Pressable>
-                )}
-              </View>
+              <SearchBar
+                containerStyle={styles.searchBox}
+                style={styles.searchInput}
+                placeholder="Search equipment by name, brand, or tag..."
+                value={equipmentSearch}
+                onChangeText={setEquipmentSearch}
+              />
 
               {/* Filter Tabs */}
               <View style={styles.filterTabsRow}>

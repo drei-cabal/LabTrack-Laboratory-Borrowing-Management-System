@@ -1,3 +1,4 @@
+import { SearchBar } from '../../components/ui/SearchBar';
 import { screenStyles } from '../../components/ui/ScreenStyles';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AppTypography } from '../../constants/typography';
@@ -236,23 +237,13 @@ export default function ReturnItemScreen() {
           {/* Section 1: Find Transaction */}
           <Text style={styles.sectionHeading}>1. Find Active Loan</Text>
 
-          <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={18} color={AppColors.textMuted} style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Borrower name or transaction ID..."
-              placeholderTextColor={AppColors.textMuted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCapitalize="none"
-              clearButtonMode="while-editing"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color={AppColors.textMuted} />
-              </TouchableOpacity>
-            )}
-          </View>
+          <SearchBar
+            containerStyle={styles.searchBar}
+            style={styles.searchInput}
+            placeholder="Borrower name or transaction ID..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
 
           {loading ? (
             <View style={styles.loadingContainer}>

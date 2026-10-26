@@ -1,0 +1,7 @@
+input[data-testid="labtrack-search-input"],
+input[data-testid="labtrack-search-input"]:focus,
+input[data-testid="labtrack-search-input"]:focus-visible {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}

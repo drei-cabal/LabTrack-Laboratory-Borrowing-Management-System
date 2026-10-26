@@ -1,15 +1,13 @@
+import { SearchBar } from '../../components/ui/SearchBar';
 import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
   View,
   StyleSheet,
-  TextInput,
   FlatList,
-  Pressable,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEquipment } from '../../hooks/useEquipment';
 import { AppColors } from '../../constants/colors';
@@ -55,6 +53,7 @@ export default function EquipmentScreen() {
         <ScreenHeader
           variant="tab"
           title="Equipment"
+          icon="cube-outline"
         />
       }
       floatingAction={
@@ -66,28 +65,13 @@ export default function EquipmentScreen() {
       }
     >
       {/* Search Input Bar */}
-      <View style={[tabPageStyles.searchFrame, styles.searchContainer]}>
-        <Ionicons
-          name="search-outline"
-          size={18}
-          color={AppColors.textMuted}
-          style={tabPageStyles.searchIcon}
-        />
-        <TextInput
-          placeholder="Search equipment..."
-          placeholderTextColor={AppColors.textMuted}
-          value={search}
-          onChangeText={setSearch}
-          style={styles.searchInput}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-        />
-        {search ? (
-          <Pressable onPress={() => setSearch('')} hitSlop={8}>
-            <Ionicons name="close-circle" size={18} color={AppColors.textMuted} />
-          </Pressable>
-        ) : null}
-      </View>
+      <SearchBar
+        containerStyle={[tabPageStyles.searchFrame, styles.searchContainer]}
+        style={styles.searchInput}
+        placeholder="Search equipment..."
+        value={search}
+        onChangeText={setSearch}
+      />
 
       {/* Filter Chips */}
       <FilterChips options={FILTER_OPTIONS} selected={filter} onSelect={setFilter} />

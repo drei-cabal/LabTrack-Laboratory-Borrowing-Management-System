@@ -37,7 +37,6 @@ export const tabPageStyles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
   },
-  searchIcon: { marginRight: 8 },
   filterRow: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
   listAfterFilters: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 90 },
   listWithoutControls: { paddingHorizontal: 16, paddingTop: 0, paddingBottom: 90 },
