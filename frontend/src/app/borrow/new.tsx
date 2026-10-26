@@ -434,7 +434,7 @@ export default function NewBorrowTransactionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={[]}>
       {/* Screen Header */}
       <ScreenHeader
         title="New Transaction"

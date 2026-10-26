@@ -11,7 +11,7 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStaff } from '../../hooks/useStaff';
@@ -23,6 +23,7 @@ import { useGuardedPress } from '../../utils/guards';
 
 export default function StaffScreen() {
   const router = useRouter();
+  const { top } = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const { staff, loading, refreshing, refresh } = useStaff();
 
@@ -145,9 +146,9 @@ export default function StaffScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(top, 32) + 14 }]}>
         <View>
           <Text style={styles.headerTitle}>Manage Staff</Text>
           <Text style={styles.headerSubtitle}>
@@ -227,7 +228,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 14,
     paddingBottom: 14,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,

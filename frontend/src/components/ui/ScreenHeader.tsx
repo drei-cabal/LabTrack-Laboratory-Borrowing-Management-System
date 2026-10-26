@@ -1,16 +1,15 @@
 import { AppTypography } from '../../constants/typography';
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, type ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppColors } from '../../constants/colors';
 
-// Reserve clearance even when the device reports a zero or undersized top inset.
-export const MIN_HEADER_TOP_INSET = 32;
-
 const HEADER = {
   minHeight: 54,
+  minTopInset: 32,
   topPadding: 8,
   horizontalPadding: 20,
   borderWidth: 1,
@@ -35,18 +34,16 @@ export interface ScreenHeaderProps {
   title: string;
   onBack?: () => void;
   right?: React.ReactNode;
-  variant: 'tab' | 'detail';
+  variant: 'tab' | 'detail' | 'banner';
+  children?: React.ReactNode;
 }
 
-export function ScreenHeader({ title, onBack, right, variant }: ScreenHeaderProps) {
+export function ScreenHeader({ title, onBack, right, variant, children }: ScreenHeaderProps) {
   const router = useRouter();
-  const { top } = useSafeAreaInsets();
-  const safeAreaStyle = Platform.OS === 'web'
-    ? styles.webSafeArea
-    : {
-        minHeight: HEADER.minHeight + (top > 0 ? top : 0),
-        paddingTop: top > 0 ? top : 0,
-      };
+  const isFocused = useIsFocused();
+  const { top, left, right: rightInset } = useSafeAreaInsets();
+  // Some phone browsers report no inset even when a camera cutout is present.
+  const paddingTop = Math.max(top, HEADER.minTopInset) + HEADER.topPadding;
 
   const handleBack = () => {
     if (onBack) {
@@ -62,35 +59,43 @@ export function ScreenHeader({ title, onBack, right, variant }: ScreenHeaderProp
     <View
       style={[
         styles.header,
-        variant === 'tab' && styles.tab,
-        safeAreaStyle,
-        variant === 'tab' && { height: safeAreaStyle.minHeight },
+        variant === 'banner' && styles.banner,
+        { paddingTop },
+        variant === 'banner' && {
+          paddingLeft: left + HEADER.horizontalPadding,
+          paddingRight: rightInset + HEADER.horizontalPadding,
+          marginLeft: -left,
+          marginRight: -rightInset,
+        },
       ]}
     >
-      {variant === 'detail' ? (
-        <>
-          <Pressable
-            onPress={handleBack}
-            hitSlop={HEADER.backHitSlop}
-            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <Ionicons name="chevron-back" size={HEADER.backIconSize} color={AppColors.text} />
-          </Pressable>
-          <Text style={styles.detailTitle} numberOfLines={1}>{title}</Text>
-          {right ? <View style={styles.right}>{right}</View> : <View style={styles.rightSpacer} />}
-        </>
-      ) : (
-        <>
-          <View style={styles.titleBlock}>
-            <Text style={styles.tabTitle} numberOfLines={1}>
-              {title}
-            </Text>
-          </View>
-          {right ? <View style={styles.right}>{right}</View> : null}
-        </>
-      )}
+      {isFocused ? <StatusBar style={variant === 'banner' ? 'light' : 'dark'} /> : null}
+      <View style={styles.contentRow}>
+        {variant === 'banner' ? children : variant === 'detail' ? (
+          <>
+            <Pressable
+              onPress={handleBack}
+              hitSlop={HEADER.backHitSlop}
+              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+            >
+              <Ionicons name="chevron-back" size={HEADER.backIconSize} color={AppColors.text} />
+            </Pressable>
+            <Text style={styles.detailTitle} numberOfLines={1}>{title}</Text>
+            {right ? <View style={styles.right}>{right}</View> : <View style={styles.rightSpacer} />}
+          </>
+        ) : (
+          <>
+            <View style={styles.titleBlock}>
+              <Text style={styles.tabTitle} numberOfLines={1}>
+                {title}
+              </Text>
+            </View>
+            {right ? <View style={styles.right}>{right}</View> : null}
+          </>
+        )}
+      </View>
     </View>
   );
 }
@@ -141,22 +146,23 @@ export function ScreenHeaderTextAction({
 }
 
 const styles = StyleSheet.create({
-  // React Native Web accepts CSS calculations; native uses the measured inset above.
-  webSafeArea: {
-    paddingTop: 0,
-    minHeight: HEADER.minHeight,
-    height: HEADER.minHeight,
-  } as unknown as ViewStyle,
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexShrink: 0,
     paddingHorizontal: HEADER.horizontalPadding,
     backgroundColor: AppColors.white,
     borderBottomWidth: HEADER.borderWidth,
     borderBottomColor: AppColors.headerBorder,
   },
-  tab: {
-    flexShrink: 0,
+  contentRow: {
+    minHeight: HEADER.minHeight,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  banner: {
+    marginBottom: 4,
+    paddingBottom: 22,
+    backgroundColor: AppColors.navy,
+    borderBottomWidth: 0,
   },
   titleBlock: {
     flex: 1,

@@ -13,9 +13,8 @@ import {
 } from 'react-native';
 import { authService } from '../../services/authService';
 import { Ionicons } from '@expo/vector-icons';
-import { useIsFocused, useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { useDashboard } from '../../hooks/useDashboard';
 import { AppColors } from '../../constants/colors';
 import { RoleBadge } from '../../components/ui/RoleBadge';
@@ -53,8 +52,6 @@ function formatWelcomeName(name?: string, username?: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const isFocused = useIsFocused();
-  const insets = useSafeAreaInsets();
   const { data, loading, refreshing, refresh, currentUser } = useDashboard();
 
   const handleNewTransactionPress = useGuardedPress(() => {
@@ -125,17 +122,7 @@ export default function HomeScreen() {
   return (
     <TabPageLayout
       header={
-        <View style={[
-          styles.welcomeBanner,
-          {
-            paddingTop: Platform.OS === 'web' ? 16 : (insets.top > 0 ? insets.top + 12 : 16),
-            paddingLeft: insets.left + 20,
-            paddingRight: insets.right + 20,
-            marginLeft: -insets.left,
-            marginRight: -insets.right,
-          },
-        ]}>
-          {isFocused ? <StatusBar style="light" /> : null}
+        <ScreenHeader variant="banner" title={welcomeName}>
           <View style={styles.welcomeText}>
             <Text style={styles.welcomeLabel}>WELCOME BACK</Text>
             <Text style={styles.welcomeName} numberOfLines={1}>{welcomeName}</Text>
@@ -151,7 +138,7 @@ export default function HomeScreen() {
               <Ionicons name="log-out-outline" size={20} color="rgba(255,255,255,0.75)" />
             </Pressable>
           </View>
-        </View>
+        </ScreenHeader>
       }
       backgroundColor={AppColors.white}
       floatingAction={
@@ -376,15 +363,6 @@ const styles = StyleSheet.create({
   emptyListContent: {
     flexGrow: 1,
     justifyContent: 'center',
-  },
-  welcomeBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexShrink: 0,
-    marginBottom: 4, // The shared body adds 12px, preserving the 16px gap below the banner.
-    paddingHorizontal: 20,
-    paddingBottom: 22,
-    backgroundColor: AppColors.navy,
   },
   headerRight: {
     flexDirection: 'row',
