@@ -12,7 +12,6 @@ export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // No local DB init needed — data comes from the REST API server
     SplashScreen.hideAsync()
       .catch(() => {})
       .finally(() => setIsReady(true));
@@ -37,6 +36,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="equipment/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="equipment/add" options={{ headerShown: false }} />

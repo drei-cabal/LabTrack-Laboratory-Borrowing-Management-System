@@ -4,16 +4,17 @@
     "slug": "LabTrack",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/branding/labtrack-logo.png",
+    "icon": "./assets/branding/labtrack-app-icon.png",
     "scheme": "labtrack",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/branding/labtrack-logo.png"
+      "icon": "./assets/branding/labtrack-app-icon.png"
     },
     "android": {
+      "package": "com.cabal.labtrack",
       "adaptiveIcon": {
-        "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/branding/labtrack-logo.png"
+        "backgroundColor": "#052754",
+        "foregroundImage": "./assets/branding/labtrack-app-icon.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -33,11 +34,25 @@
         }
       ],
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow LabTrack to take equipment handover photos.",
+          "photosPermission": "Allow LabTrack to attach equipment handover photos.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5ac59660-026b-4d1d-bc98-a184044e00f4"
+      }
     }
   }
 }

@@ -155,8 +155,8 @@ npm run start
 - Press `w` to run in Web Browser.
 - Scan the QR code using the **Expo Go** app on your physical mobile device.
 
-> **Note for Physical Device Testing:**
-> Set your computer's local IP address in `frontend/.env`:
+> **Web API configuration:**
+> The web app uses the Express API configured in `frontend/.env`. Android uses an on-device database and does not need this URL:
 > ```env
 > EXPO_PUBLIC_API_URL=http://<YOUR_LOCAL_IP>:3001/api
 > ```
@@ -164,6 +164,8 @@ npm run start
 ---
 
 ## 🧪 Default Test Credentials
+
+These credentials apply to the Express-backed web app. Each mobile installation creates its own administrator account on first launch.
 
 | Full Name | Username | Password | Role |
 | :--- | :--- | :--- | :--- |
@@ -175,8 +177,17 @@ npm run start
 
 ## 📦 Building Standalone APK
 
-To generate an installable Android APK file:
-```bash
-cd frontend
-npx eas-cli build -p android --profile preview
+Android builds run offline using Expo SQLite. Login, staff management, equipment, loans, returns, and dashboard calculations run on the phone; Express is only needed for the web app. Each installation has independent data, with no cross-device synchronization. Uninstalling the app removes its local database.
+
+On first launch, enter your name and choose an administrator username and a password of at least 8 characters. No shared password is bundled. A sample equipment catalog is seeded once; accounts and transactions start empty. No laptop database or borrower records are bundled. Subsequent updates preserve local changes. Optional handover photos are copied to the app's document storage.
+
+From `frontend`, validate and build a signed installable APK:
+
+```powershell
+npm.cmd run test:offline
+npx.cmd tsc --noEmit
+npm.cmd run lint
+npx.cmd eas-cli@latest build --platform android --profile release
 ```
+
+The offline tests use the existing `sql.js` dependency from `backend`, so install dependencies in both folders before running them. EAS supplies the APK download link after a successful build. The Android package is `com.cabal.labtrack`; keep the same EAS signing key and package for future updates.

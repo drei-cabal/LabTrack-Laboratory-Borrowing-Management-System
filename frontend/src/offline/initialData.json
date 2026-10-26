@@ -1,0 +1,92 @@
+{
+  "equipment": [
+    {
+      "id": "catalog-eq-001",
+      "product_id": "EQ-001",
+      "name": "Digital Multimeter",
+      "brand": "Fluke",
+      "model": "117 True RMS",
+      "description": "Digital multimeter for electrical measurements",
+      "total_quantity": 5,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "catalog-eq-002",
+      "product_id": "EQ-002",
+      "name": "Oscilloscope",
+      "brand": "Rigol",
+      "model": "DS1054Z",
+      "description": "Digital oscilloscope with 4 channels",
+      "total_quantity": 2,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "catalog-eq-003",
+      "product_id": "EQ-003",
+      "name": "Function Generator",
+      "brand": "Rigol",
+      "model": "DG1022Z",
+      "description": "Arbitrary waveform function generator",
+      "total_quantity": 3,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "catalog-eq-004",
+      "product_id": "EQ-004",
+      "name": "Soldering Iron Station",
+      "brand": "Hakko",
+      "model": "FX-888D",
+      "description": "Temperature-controlled soldering station",
+      "total_quantity": 4,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "catalog-eq-005",
+      "product_id": "EQ-005",
+      "name": "Logic Analyzer",
+      "brand": "Saleae",
+      "model": "Logic 8",
+      "description": "8-channel USB logic analyzer",
+      "total_quantity": 3,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "catalog-eq-006",
+      "product_id": "EQ-006",
+      "name": "Breadboard Set",
+      "brand": "Elegoo",
+      "model": "MB-102",
+      "description": "Solderless breadboards with jumper wires",
+      "total_quantity": 10,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "catalog-eq-007",
+      "product_id": "EQ-007",
+      "name": "DC Power Supply",
+      "brand": "Keysight",
+      "model": "E3631A",
+      "description": "Triple output programmable DC power supply",
+      "total_quantity": 3,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "catalog-eq-008",
+      "product_id": "EQ-008",
+      "name": "Spectrum Analyzer",
+      "brand": "Siglent",
+      "model": "SSA3021X",
+      "description": "9 kHz to 2.1 GHz spectrum analyzer",
+      "total_quantity": 1,
+      "created_at": "2026-01-01T00:00:00.000Z",
+      "updated_at": "2026-01-01T00:00:00.000Z"
+    }
+  ]
+}

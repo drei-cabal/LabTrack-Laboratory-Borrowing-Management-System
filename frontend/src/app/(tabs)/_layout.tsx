@@ -6,7 +6,8 @@ import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppColors } from '../../constants/colors';
 
-import { tokenStore } from '../../services/tokenStore';
+import { authService } from '../../services/authService';
+import { ROUTES } from '../../routing/routes';
 
 export default function TabLayout() {
   const router = useRouter();
@@ -17,14 +18,14 @@ export default function TabLayout() {
   const [isAdmin, setIsAdmin] = React.useState(true);
 
   React.useEffect(() => {
-    tokenStore.getUser().then((user) => {
+    authService.getCurrentUser().then((user) => {
       if (user) {
         setIsAdmin(user.role === 'admin');
       } else {
-        router.replace('/' as any);
+        router.replace(ROUTES.LOGIN);
       }
-    });
-  }, []);
+    }).catch(() => router.replace(ROUTES.LOGIN));
+  }, [router]);
 
   const tabMinHeight = (isIos ? 60 : 70) + bottomInset;
   const tabPaddingBottom = Math.max(bottomInset, isIos ? 16 : 12);
