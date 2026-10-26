@@ -1,13 +1,12 @@
 import { SearchBar } from '../../components/ui/SearchBar';
 import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  TextInput,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -21,7 +20,7 @@ import { StatusBadge } from '../../components/ui/StatusBadge';
 import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { FilterChips } from '../../components/ui/FilterChips';
 import { Fab } from '../../components/ui/Fab';
-import { ScreenHeader, ScreenHeaderIconAction } from '../../components/ui/ScreenHeader';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { useRecords } from '../../hooks/useRecords';
 import { ROUTES } from '../../routing/routes';
 import { formatDateDisplay } from '../../utils/date';
@@ -41,7 +40,6 @@ export default function RecordsScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const searchInputRef = useRef<TextInput>(null);
 
   const { transactions, loading, refreshing, refresh } = useRecords(filter);
 
@@ -124,13 +122,6 @@ export default function RecordsScreen() {
           variant="tab"
           title="Records"
           icon="documents-outline"
-          right={
-            <ScreenHeaderIconAction
-              icon="search-outline"
-              label="Search records"
-              onPress={() => searchInputRef.current?.focus()}
-            />
-          }
         />
       }
       floatingAction={
@@ -143,7 +134,6 @@ export default function RecordsScreen() {
     >
       {/* Search Input Bar */}
       <SearchBar
-        ref={searchInputRef}
         containerStyle={[tabPageStyles.searchFrame, styles.searchContainer]}
         style={styles.searchInput}
         placeholder="Search by borrower name, ID, or item..."

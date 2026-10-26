@@ -78,7 +78,6 @@ export function ScreenHeader({ title, subtitle, icon, tone = 'light', onBack, ri
       <View pointerEvents="none" style={styles.decoration} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
         <View style={[styles.outerRing, isNavy && styles.navyRing]} />
         <View style={[styles.innerRing, isNavy && styles.navyRing]} />
-        <View style={[styles.accent, isNavy && styles.navyAccent]} />
       </View>
       <View style={styles.contentRow}>
         {variant === 'banner' ? children : variant === 'detail' ? (
@@ -204,18 +203,6 @@ const styles = StyleSheet.create({
   },
   navyRing: {
     borderColor: 'rgba(255,255,255,0.08)',
-  },
-  accent: {
-    position: 'absolute',
-    bottom: 0,
-    left: HEADER.horizontalPadding,
-    width: 32,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: AppColors.navy,
-  },
-  navyAccent: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
   },
   iconTile: {
     width: 40,

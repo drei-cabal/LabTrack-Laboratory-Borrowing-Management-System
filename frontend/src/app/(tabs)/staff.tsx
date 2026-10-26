@@ -13,7 +13,8 @@ import {
   Platform,
 } from 'react-native';
 import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
-import { ScreenHeader, ScreenHeaderTextAction } from '../../components/ui/ScreenHeader';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
+import { Fab } from '../../components/ui/Fab';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStaff } from '../../hooks/useStaff';
@@ -155,9 +156,9 @@ export default function StaffScreen() {
           title="Manage Staff"
           icon="people-outline"
           subtitle={`${staff.length} registered laboratory personnel`}
-          right={<ScreenHeaderTextAction icon="add" label="Add Staff" onPress={handleAddPress} />}
         />
       }
+      floatingAction={<Fab icon="add" label="Add Staff" onPress={handleAddPress} />}
     >
       {/* Search Bar */}
       <SearchBar
