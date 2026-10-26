@@ -9,8 +9,7 @@ import {
   Pressable,
   RefreshControl,
   ActivityIndicator,
-  Platform,
-  Alert,
+  Modal,
 } from 'react-native';
 import { authService } from '../../services/authService';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +25,7 @@ import { DashboardOverdueItem, DashboardRecentTransaction } from '../../types';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { Fab } from '../../components/ui/Fab';
+import { Button } from '../../components/ui/Button';
 
 
 function formatWelcomeName(name?: string, username?: string): string {
@@ -53,6 +53,9 @@ function formatWelcomeName(name?: string, username?: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [showLogoutDialog, setShowLogoutDialog] = React.useState(false);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const [logoutError, setLogoutError] = React.useState<string | null>(null);
   const { data, loading, refreshing, refresh, currentUser } = useDashboard();
 
   const handleNewTransactionPress = useGuardedPress(() => {
@@ -94,29 +97,28 @@ export default function HomeScreen() {
   const minSectionHeight = sectionsHeight > 0 ? Math.max(0, Math.min(80, (sectionsHeight - 20) / 2)) : 80;
 
   const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to log out of LabTrack?')) {
-        authService.logout().then(() => {
-          window.location.href = '/';
-        });
-      }
-    } else {
-      Alert.alert(
-        'Log Out',
-        'Are you sure you want to log out of LabTrack?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Log Out',
-            style: 'destructive',
-            onPress: async () => {
-              await authService.logout();
-              router.replace(ROUTES.LOGIN as any);
-            },
-          },
-        ],
-        { cancelable: true }
-      );
+    setLogoutError(null);
+    setShowLogoutDialog(true);
+  };
+
+  const closeLogoutDialog = () => {
+    if (isLoggingOut) return;
+    setShowLogoutDialog(false);
+    setLogoutError(null);
+  };
+
+  const confirmLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    setLogoutError(null);
+    try {
+      await authService.logout();
+      setShowLogoutDialog(false);
+      router.replace(ROUTES.LOGIN);
+    } catch {
+      setLogoutError('Could not log out. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -339,11 +341,94 @@ export default function HomeScreen() {
           </View>
         </View>
       )}
+      <Modal
+        visible={showLogoutDialog}
+        transparent
+        animationType="fade"
+        onRequestClose={closeLogoutDialog}
+      >
+        <View style={styles.logoutOverlay}>
+          <Pressable
+            style={styles.logoutBackdrop}
+            accessible={false}
+            focusable={false}
+            onPress={closeLogoutDialog}
+          />
+          <View style={styles.logoutDialog} accessibilityViewIsModal>
+            <Text style={styles.logoutTitle} accessibilityRole="header">Log out of LabTrack?</Text>
+            <Text style={styles.logoutMessage}>
+              You will need to sign in again to access your laboratory workspace.
+            </Text>
+            {logoutError ? (
+              <Text style={styles.logoutError} accessibilityRole="alert">{logoutError}</Text>
+            ) : null}
+            <View style={styles.logoutActions}>
+              <Button
+                title="Cancel"
+                variant="secondary"
+                fullWidth={false}
+                style={styles.logoutAction}
+                disabled={isLoggingOut}
+                onPress={closeLogoutDialog}
+              />
+              <Button
+                title="Log Out"
+                fullWidth={false}
+                style={[styles.logoutAction, styles.logoutConfirm]}
+                loading={isLoggingOut}
+                onPress={confirmLogout}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  logoutOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: 'rgba(7,21,43,0.55)',
+  },
+  logoutBackdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  logoutDialog: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: AppColors.border,
+    padding: 24,
+    backgroundColor: AppColors.white,
+  },
+  logoutTitle: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.large,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.navy,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  logoutMessage: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.supporting,
+    lineHeight: AppTypography.lineHeight.body,
+    color: AppColors.textSecondary,
+    textAlign: 'center',
+  },
+  logoutError: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    color: AppColors.red,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  logoutActions: { flexDirection: 'row', gap: 12, marginTop: 24 },
+  logoutAction: { flex: 1, borderRadius: 12 },
+  logoutConfirm: { backgroundColor: AppColors.red },
   dashboardContent: {
     flex: 1,
     minHeight: 0,
