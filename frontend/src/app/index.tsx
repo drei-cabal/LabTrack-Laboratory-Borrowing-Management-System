@@ -1,3 +1,4 @@
+import { screenStyles } from '../components/ui/ScreenStyles';
 import { AppTypography } from '../constants/typography';
 import React, { useState } from 'react';
 import {
@@ -173,8 +174,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: AppColors.white,
+    ...screenStyles.screen,
   },
   keyboardView: {
     flex: 1,
@@ -217,8 +217,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D9DDE4',
-    backgroundColor: AppColors.background,
+    borderColor: AppColors.border,
+    backgroundColor: AppColors.white,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',

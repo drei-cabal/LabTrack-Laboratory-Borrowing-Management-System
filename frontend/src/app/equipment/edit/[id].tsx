@@ -1,3 +1,4 @@
+import { screenStyles } from '../../../components/ui/ScreenStyles';
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
@@ -213,8 +214,7 @@ export default function EditEquipmentScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+    ...screenStyles.screen,
   },
   keyboardView: {
     flex: 1,

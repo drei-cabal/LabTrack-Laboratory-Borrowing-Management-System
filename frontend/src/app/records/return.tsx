@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AppTypography } from '../../constants/typography';
 import {
@@ -16,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { AppColors } from '../../constants/colors';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
@@ -218,13 +220,7 @@ export default function ReturnItemScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} style={styles.backBtn}>
-            <Ionicons name="chevron-back" size={24} color="#0F172A" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Return Equipment</Text>
-          <View style={{ width: 40 }} />
-        </View>
+        <ScreenHeader variant="detail" title="Return Equipment" onBack={handleBackPress} />
 
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -523,29 +519,7 @@ export default function ReturnItemScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: AppColors.white,
-  },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: AppColors.border,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.bodyStrong,
-    fontWeight: AppTypography.weight.bold,
-    color: AppColors.navy,
+    ...screenStyles.screen,
   },
   scrollContent: {
     padding: 16,
@@ -619,12 +593,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   txCard: {
+    ...screenStyles.card,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: AppColors.white,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppColors.border,
     padding: 12,
   },
   txCardSelected: {
@@ -671,10 +642,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   itemsCard: {
-    backgroundColor: AppColors.white,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     padding: 14,
     gap: 12,
   },

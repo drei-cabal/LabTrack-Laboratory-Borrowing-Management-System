@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputWrapper: {
-    backgroundColor: AppColors.background,
+    backgroundColor: AppColors.white,
     borderWidth: 1,
     borderColor: AppColors.border,
     borderRadius: 8,

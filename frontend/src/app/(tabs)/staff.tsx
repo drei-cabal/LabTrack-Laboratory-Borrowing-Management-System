@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import React, { useState, useMemo } from 'react';
 import { AppTypography } from '../../constants/typography';
 import {
@@ -11,7 +12,8 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
+import { ScreenHeader, ScreenHeaderTextAction } from '../../components/ui/ScreenHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useStaff } from '../../hooks/useStaff';
@@ -23,7 +25,6 @@ import { useGuardedPress } from '../../utils/guards';
 
 export default function StaffScreen() {
   const router = useRouter();
-  const { top } = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const { staff, loading, refreshing, refresh } = useStaff();
 
@@ -146,30 +147,19 @@ export default function StaffScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      {/* Top Header */}
-      <View style={[styles.header, { paddingTop: Math.max(top, 32) + 14 }]}>
-        <View>
-          <Text style={styles.headerTitle}>Manage Staff</Text>
-          <Text style={styles.headerSubtitle}>
-            {staff.length} registered laboratory personnel
-          </Text>
-        </View>
-
-        {/* Square Add Staff Header Button */}
-        <Pressable
-          onPress={handleAddPress}
-          style={({ pressed }) => [styles.headerAddBtn, pressed && styles.btnPressed]}
-          accessibilityRole="button"
-          accessibilityLabel="Add Staff"
-        >
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <Text style={styles.headerAddText}>Add Staff</Text>
-        </Pressable>
-      </View>
-
-      {/* Search Bar (Square) */}
-      <View style={styles.searchBar}>
+    <TabPageLayout
+      backgroundColor={AppColors.background}
+      header={
+        <ScreenHeader
+          variant="tab"
+          title="Manage Staff"
+          subtitle={`${staff.length} registered laboratory personnel`}
+          right={<ScreenHeaderTextAction icon="add" label="Add Staff" onPress={handleAddPress} />}
+        />
+      }
+    >
+      {/* Search Bar */}
+      <View style={[tabPageStyles.searchFrame, styles.searchBar]}>
         <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.searchInput}
@@ -199,7 +189,7 @@ export default function StaffScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderStaffItem}
           contentContainerStyle={[
-            styles.listContent,
+            tabPageStyles.listWithoutControls,
             filteredStaff.length === 0 && styles.listContentEmpty,
           ]}
           ListEmptyComponent={renderEmptyState}
@@ -214,70 +204,23 @@ export default function StaffScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </SafeAreaView>
+    </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.3,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  headerAddBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#0F172A',
-    borderRadius: 4, // Square design
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
   btnPressed: {
     opacity: 0.85,
   },
-  headerAddText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-  },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 8,
-    paddingHorizontal: 12,
-    borderRadius: 4, // Square design
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    height: 42,
+    backgroundColor: AppColors.white,
+    borderColor: AppColors.border,
   },
   searchInput: {
     flex: 1,
-    fontSize: 14,
-    color: '#0F172A',
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.body,
+    color: AppColors.text,
   },
   loadingContainer: {
     flex: 1,
@@ -287,32 +230,19 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 13,
-    color: '#64748B',
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 40,
+    color: AppColors.textSecondary,
   },
   listContentEmpty: {
     flexGrow: 1,
     justifyContent: 'center',
   },
   staffCard: {
+    ...screenStyles.card,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 4, // Square design
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
   },
   staffCardPressed: {
     backgroundColor: '#F1F5F9',
@@ -357,15 +287,15 @@ const styles = StyleSheet.create({
   staffName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A',
+    color: AppColors.text,
     flexShrink: 1,
   },
   staffNameInactive: {
-    color: '#64748B',
+    color: AppColors.textSecondary,
   },
   staffUsername: {
     fontSize: 12,
-    color: '#64748B',
+    color: AppColors.textSecondary,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   emailRow: {
@@ -456,13 +386,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
+    color: AppColors.text,
     marginBottom: 6,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: AppColors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 20,

@@ -50,7 +50,7 @@ export default function EquipmentScreen() {
 
   return (
     <TabPageLayout
-      backgroundColor={AppColors.white}
+      backgroundColor={AppColors.background}
       header={
         <ScreenHeader
           variant="tab"
@@ -123,7 +123,7 @@ export default function EquipmentScreen() {
 
 const styles = StyleSheet.create({
   searchContainer: {
-    backgroundColor: AppColors.background,
+    backgroundColor: AppColors.white,
     borderColor: AppColors.border,
   },
   searchInput: {

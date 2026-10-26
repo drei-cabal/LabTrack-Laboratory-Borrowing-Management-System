@@ -1,3 +1,4 @@
+import { screenStyles } from '../ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
@@ -52,17 +53,9 @@ export function EquipmentCard({ item, onPress }: EquipmentCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: AppColors.white,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     padding: 14,
     marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 2,
-    elevation: 1,
   },
   cardPressed: {
     backgroundColor: AppColors.background,

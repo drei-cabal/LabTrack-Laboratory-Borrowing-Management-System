@@ -32,18 +32,21 @@ type HeaderIcon = React.ComponentProps<typeof Ionicons>['name'];
 
 export interface ScreenHeaderProps {
   title: string;
+  subtitle?: string;
+  tone?: 'light' | 'navy';
   onBack?: () => void;
   right?: React.ReactNode;
   variant: 'tab' | 'detail' | 'banner';
   children?: React.ReactNode;
 }
 
-export function ScreenHeader({ title, onBack, right, variant, children }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, tone = 'light', onBack, right, variant, children }: ScreenHeaderProps) {
   const router = useRouter();
   const isFocused = useIsFocused();
   const { top, left, right: rightInset } = useSafeAreaInsets();
   // Some phone browsers report no inset even when a camera cutout is present.
   const paddingTop = Math.max(top, HEADER.minTopInset) + HEADER.topPadding;
+  const isNavy = tone === 'navy' || variant === 'banner';
 
   const handleBack = () => {
     if (onBack) {
@@ -59,6 +62,7 @@ export function ScreenHeader({ title, onBack, right, variant, children }: Screen
     <View
       style={[
         styles.header,
+        isNavy && styles.navyHeader,
         variant === 'banner' && styles.banner,
         { paddingTop },
         variant === 'banner' && {
@@ -69,7 +73,7 @@ export function ScreenHeader({ title, onBack, right, variant, children }: Screen
         },
       ]}
     >
-      {isFocused ? <StatusBar style={variant === 'banner' ? 'light' : 'dark'} /> : null}
+      {isFocused ? <StatusBar style={isNavy ? 'light' : 'dark'} /> : null}
       <View style={styles.contentRow}>
         {variant === 'banner' ? children : variant === 'detail' ? (
           <>
@@ -80,17 +84,18 @@ export function ScreenHeader({ title, onBack, right, variant, children }: Screen
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
-              <Ionicons name="chevron-back" size={HEADER.backIconSize} color={AppColors.text} />
+              <Ionicons name="chevron-back" size={HEADER.backIconSize} color={isNavy ? AppColors.white : AppColors.text} />
             </Pressable>
-            <Text style={styles.detailTitle} numberOfLines={1}>{title}</Text>
+            <Text style={[styles.detailTitle, isNavy && styles.navyTitle]} numberOfLines={1}>{title}</Text>
             {right ? <View style={styles.right}>{right}</View> : <View style={styles.rightSpacer} />}
           </>
         ) : (
           <>
             <View style={styles.titleBlock}>
-              <Text style={styles.tabTitle} numberOfLines={1}>
+              <Text style={[styles.tabTitle, isNavy && styles.navyTitle]} numberOfLines={1}>
                 {title}
               </Text>
+              {subtitle ? <Text style={[styles.subtitle, isNavy && styles.navySubtitle]} numberOfLines={1}>{subtitle}</Text> : null}
             </View>
             {right ? <View style={styles.right}>{right}</View> : null}
           </>
@@ -158,6 +163,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  navyHeader: {
+    backgroundColor: AppColors.navy,
+    borderBottomColor: AppColors.navy,
+  },
+  navyTitle: {
+    color: AppColors.white,
+  },
+  navySubtitle: {
+    color: AppColors.headerBannerLabel,
+  },
   banner: {
     marginBottom: 4,
     paddingBottom: 22,
@@ -173,6 +188,12 @@ const styles = StyleSheet.create({
     fontSize: HEADER.tabTitleSize,
     fontWeight: AppTypography.weight.bold,
     color: AppColors.text,
+  },
+  subtitle: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.small,
+    color: AppColors.textSecondary,
+    marginTop: 2,
   },
   detailTitle: {
     flex: 1,

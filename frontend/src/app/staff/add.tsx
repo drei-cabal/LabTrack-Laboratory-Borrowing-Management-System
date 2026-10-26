@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React, { useState } from 'react';
 import {
@@ -15,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { AppColors } from '../../constants/colors';
 import { staffService } from '../../services/staffService';
 import { useGuardedPress } from '../../utils/guards';
@@ -106,15 +108,9 @@ export default function AddStaffScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      {/* Header (Square buttons & clean alignment) */}
-      <View style={styles.header}>
-        <Pressable onPress={handleBack} style={styles.backBtnSquare} hitSlop={8}>
-          <Ionicons name="chevron-back" size={20} color="#0F172A" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Add Staff Member</Text>
-        <View style={{ width: 36 }} />
-      </View>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      {/* Header */}
+      <ScreenHeader variant="detail" title="Add Staff Member" onBack={handleBack} />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -367,33 +363,7 @@ export default function AddStaffScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: AppColors.white,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-  },
-  backBtnSquare: {
-    width: 36,
-    height: 36,
-    borderRadius: 4, // Square design
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    ...screenStyles.screen,
   },
   keyboardView: {
     flex: 1,
@@ -430,10 +400,10 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     height: 46,
-    borderRadius: 4, // Square design
-    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    backgroundColor: AppColors.white,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -477,8 +478,7 @@ export default function TransactionDetailScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: AppColors.background,
+    ...screenStyles.screen,
   },
   actionBtn: {
     backgroundColor: '#0F172A',
@@ -504,17 +504,9 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: AppColors.white,
-    borderRadius: 10,
+    ...screenStyles.card,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: AppColors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
   },
   cardHeader: {
     flexDirection: 'row',

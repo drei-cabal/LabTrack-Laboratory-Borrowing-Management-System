@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import React, { useState } from 'react';
 import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -142,8 +143,7 @@ export default function AddEquipmentScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+    ...screenStyles.screen,
   },
   keyboardView: {
     flex: 1,

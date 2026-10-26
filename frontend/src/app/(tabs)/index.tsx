@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
@@ -122,25 +123,27 @@ export default function HomeScreen() {
   return (
     <TabPageLayout
       header={
-        <ScreenHeader variant="banner" title={welcomeName}>
-          <View style={styles.welcomeText}>
-            <Text style={styles.welcomeLabel}>WELCOME BACK</Text>
-            <Text style={styles.welcomeName} numberOfLines={1}>{welcomeName}</Text>
-          </View>
-          <View style={styles.headerRight}>
-            <RoleBadge role={isAdmin ? 'admin' : 'assistant'} />
-            <Pressable
-              onPress={handleLogout}
-              style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
-              accessibilityRole="button"
-              accessibilityLabel="Log out"
-            >
-              <Ionicons name="log-out-outline" size={20} color="rgba(255,255,255,0.75)" />
-            </Pressable>
-          </View>
-        </ScreenHeader>
+        <ScreenHeader
+          variant="tab"
+          tone="navy"
+          title={welcomeName}
+          subtitle="WELCOME BACK"
+          right={
+            <View style={styles.headerRight}>
+              <RoleBadge role={isAdmin ? 'admin' : 'assistant'} style={isAdmin ? styles.headerRoleBadge : undefined} />
+              <Pressable
+                onPress={handleLogout}
+                style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
+                accessibilityRole="button"
+                accessibilityLabel="Log out"
+              >
+                <Ionicons name="log-out-outline" size={20} color="rgba(255,255,255,0.75)" />
+              </Pressable>
+            </View>
+          }
+        />
       }
-      backgroundColor={AppColors.white}
+      backgroundColor={AppColors.background}
       floatingAction={
         <Fab
           icon="add"
@@ -369,6 +372,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  headerRoleBadge: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.16)',
+  },
   logoutBtn: {
     padding: 6,
     borderRadius: 8,
@@ -376,16 +383,6 @@ const styles = StyleSheet.create({
   logoutBtnPressed: {
     opacity: 0.5,
   },
-  welcomeText: { flex: 1, minWidth: 0, marginRight: 12 },
-  welcomeLabel: {
-    fontFamily: AppTypography.fontFamily,
-    fontSize: AppTypography.size.chip,
-    fontWeight: AppTypography.weight.bold,
-    color: AppColors.headerBannerLabel,
-    letterSpacing: 0.8,
-    marginBottom: 4,
-  },
-  welcomeName: { fontFamily: AppTypography.fontFamily, fontSize: AppTypography.size.display, fontWeight: AppTypography.weight.heavy, color: AppColors.white },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -398,34 +395,22 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   statCard: {
+    ...screenStyles.card,
     flex: 1,
-    borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    borderWidth: 1,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   equipmentCard: {
     backgroundColor: AppColors.white,
     borderColor: AppColors.border,
   },
   borrowedCard: {
-    backgroundColor: AppColors.borrowedBg,
-    borderColor: '#DBEAFE',
+    backgroundColor: AppColors.white,
+    borderColor: AppColors.border,
   },
   overdueCard: {
-    backgroundColor: AppColors.overdueBg,
-    borderColor: '#FEE2E2',
+    backgroundColor: AppColors.white,
+    borderColor: AppColors.border,
   },
   cardPressed: {
     opacity: 0.88,
@@ -483,26 +468,12 @@ const styles = StyleSheet.create({
     color: AppColors.navy,
   },
   overdueItemCard: {
-    backgroundColor: AppColors.white,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.03,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   redAccentStrip: {
     width: 3.5,
@@ -513,26 +484,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   transactionCard: {
-    backgroundColor: AppColors.white,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.03,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
   },
   itemInfo: {
     flex: 1,

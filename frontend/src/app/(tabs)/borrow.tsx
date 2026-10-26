@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React, { useState } from 'react';
 import {
@@ -184,7 +185,7 @@ export default function BorrowScreen() {
 
   return (
     <TabPageLayout
-      backgroundColor={AppColors.white}
+      backgroundColor={AppColors.background}
       header={
         <ScreenHeader
           variant="tab"
@@ -419,10 +420,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: AppColors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     padding: 14,
     gap: 10,
   },

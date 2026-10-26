@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import React, { useState, useMemo } from 'react';
 import { AppTypography } from '../../constants/typography';
 import {
@@ -1463,8 +1464,7 @@ export default function NewBorrowTransactionScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: AppColors.white,
+    ...screenStyles.screen,
   },
   keyboardView: {
     flex: 1,
@@ -1803,10 +1803,7 @@ const styles = StyleSheet.create({
     color: AppColors.navy,
   },
   datesCard: {
-    backgroundColor: AppColors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     padding: 16,
     gap: 10,
     marginBottom: 16,
@@ -1915,10 +1912,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryCard: {
-    backgroundColor: AppColors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     padding: 16,
     gap: 10,
     marginBottom: 16,

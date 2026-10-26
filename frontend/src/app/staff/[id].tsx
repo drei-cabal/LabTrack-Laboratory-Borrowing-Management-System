@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React, { useState, useEffect } from 'react';
 import {
@@ -15,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { ScreenHeader } from '../../components/ui/ScreenHeader';
 import { AppColors } from '../../constants/colors';
 import { staffService } from '../../services/staffService';
 import { useGuardedPress } from '../../utils/guards';
@@ -267,14 +269,8 @@ export default function EditStaffScreen() {
 
   if (loadingStaff) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-        <View style={styles.header}>
-          <Pressable onPress={handleBack} style={styles.backBtnSquare} hitSlop={8}>
-            <Ionicons name="chevron-back" size={20} color="#0F172A" />
-          </Pressable>
-          <Text style={styles.headerTitle}>Edit Staff</Text>
-          <View style={{ width: 38 }} />
-        </View>
+      <SafeAreaView style={styles.container} edges={['left', 'right']}>
+        <ScreenHeader variant="detail" title="Edit Staff" onBack={handleBack} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={AppColors.navy} />
           <Text style={styles.loadingText}>Loading staff details...</Text>
@@ -284,21 +280,9 @@ export default function EditStaffScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      {/* ─── Top Header (Aligned & Square Back Button) ─── */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={handleBack}
-          style={styles.backBtnSquare}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Ionicons name="chevron-back" size={20} color="#0F172A" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Edit Staff</Text>
-        <View style={{ width: 38 }} />
-      </View>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      {/* Header */}
+      <ScreenHeader variant="detail" title="Edit Staff" onBack={handleBack} />
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -837,8 +821,7 @@ export default function EditStaffScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: AppColors.white,
+    ...screenStyles.screen,
   },
   loadingContainer: {
     flex: 1,
@@ -850,32 +833,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     fontWeight: '500',
-  },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-  },
-  backBtnSquare: {
-    width: 38,
-    height: 38,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
-    letterSpacing: -0.2,
   },
   keyboardView: {
     flex: 1,
@@ -906,12 +863,9 @@ const styles = StyleSheet.create({
 
   /* Profile Overview Card */
   profileCard: {
+    ...screenStyles.card,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 4,
     padding: 16,
     marginBottom: 24,
     gap: 16,
@@ -1009,10 +963,10 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     height: 48,
-    borderRadius: 4,
-    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    backgroundColor: AppColors.white,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: AppColors.border,
     paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',

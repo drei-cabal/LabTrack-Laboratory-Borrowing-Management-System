@@ -1,3 +1,4 @@
+import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
@@ -181,8 +182,7 @@ export default function EquipmentDetailScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: AppColors.white,
+    ...screenStyles.screen,
   },
   content: {
     padding: 20,
@@ -204,10 +204,7 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   specsCard: {
-    backgroundColor: AppColors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: AppColors.border,
+    ...screenStyles.card,
     padding: 12,
     marginBottom: 16,
     gap: 8,
