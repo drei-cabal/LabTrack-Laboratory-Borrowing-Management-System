@@ -1,4 +1,3 @@
-import { screenStyles } from '../../components/ui/ScreenStyles';
 import { AppTypography } from '../../constants/typography';
 import React from 'react';
 import {
@@ -10,12 +9,11 @@ import {
   RefreshControl,
   ActivityIndicator,
   Platform,
-  Alert,
 } from 'react-native';
-import { authService } from '../../services/authService';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { ScreenHeader } from '../../components/ui/ScreenHeader';
+import { useIsFocused, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDashboard } from '../../hooks/useDashboard';
 import { AppColors } from '../../constants/colors';
 import { RoleBadge } from '../../components/ui/RoleBadge';
@@ -26,6 +24,7 @@ import { DashboardOverdueItem, DashboardRecentTransaction } from '../../types';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { TabPageLayout, tabPageStyles } from '../../components/ui/TabPageLayout';
 import { Fab } from '../../components/ui/Fab';
+import { MIN_HEADER_TOP_INSET } from '../../components/ui/ScreenHeader';
 
 
 function formatWelcomeName(name?: string, username?: string): string {
@@ -53,6 +52,8 @@ function formatWelcomeName(name?: string, username?: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const { data, loading, refreshing, refresh, currentUser } = useDashboard();
 
   const handleNewTransactionPress = useGuardedPress(() => {
@@ -89,62 +90,29 @@ export default function HomeScreen() {
   };
   const overdueItems = data?.overdue_items ?? [];
   const recentTransactions = data?.recent_transactions ?? [];
-  const [sectionsHeight, setSectionsHeight] = React.useState(0);
-  // Keep both sections bounded by the navigator, even when a short screen cannot fit 80px each.
-  const minSectionHeight = sectionsHeight > 0 ? Math.max(0, Math.min(80, (sectionsHeight - 20) / 2)) : 80;
-
-  const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to log out of LabTrack?')) {
-        authService.logout().then(() => {
-          window.location.href = '/';
-        });
-      }
-    } else {
-      Alert.alert(
-        'Log Out',
-        'Are you sure you want to log out of LabTrack?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Log Out',
-            style: 'destructive',
-            onPress: async () => {
-              await authService.logout();
-              router.replace(ROUTES.LOGIN as any);
-            },
-          },
-        ],
-        { cancelable: true }
-      );
-    }
-  };
 
   return (
     <TabPageLayout
       header={
-        <ScreenHeader
-          variant="tab"
-          tone="navy"
-          icon="flask-outline"
-          title={welcomeName}
-          subtitle="WELCOME BACK"
-          right={
-            <View style={styles.headerRight}>
-              <RoleBadge role={isAdmin ? 'admin' : 'assistant'} style={isAdmin ? styles.headerRoleBadge : undefined} />
-              <Pressable
-                onPress={handleLogout}
-                style={({ pressed }) => [styles.logoutBtn, pressed && styles.logoutBtnPressed]}
-                accessibilityRole="button"
-                accessibilityLabel="Log out"
-              >
-                <Ionicons name="log-out-outline" size={20} color="rgba(255,255,255,0.75)" />
-              </Pressable>
-            </View>
-          }
-        />
+        <View style={[
+          styles.welcomeBanner,
+          {
+            paddingTop: Math.max(insets.top, MIN_HEADER_TOP_INSET) + 16,
+            paddingLeft: insets.left + 20,
+            paddingRight: insets.right + 20,
+            marginLeft: -insets.left,
+            marginRight: -insets.right,
+          },
+        ]}>
+          {isFocused ? <StatusBar style="light" /> : null}
+          <View style={styles.welcomeText}>
+            <Text style={styles.welcomeLabel}>WELCOME BACK</Text>
+            <Text style={styles.welcomeName} numberOfLines={1}>{welcomeName}</Text>
+          </View>
+          <RoleBadge role={isAdmin ? 'admin' : 'assistant'} />
+        </View>
       }
-      backgroundColor={AppColors.background}
+      backgroundColor={AppColors.white}
       floatingAction={
         <Fab
           icon="add"
@@ -153,13 +121,24 @@ export default function HomeScreen() {
         />
       }
     >
-      {/* ─── Fixed Content ─── */}
+      {/* ─── Scrollable Content ─── */}
       {loading && !data ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={AppColors.navy} />
         </View>
       ) : (
-        <View style={[tabPageStyles.bodyGutters, styles.dashboardContent]}>
+        <ScrollView
+          contentContainerStyle={tabPageStyles.listWithoutControls}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              colors={[AppColors.navy]}
+              tintColor={AppColors.navy}
+            />
+          }
+        >
           {/* ─── Stat Cards (3 Columns) ─── */}
           <View style={styles.statsRow}>
             {/* Equipment Card */}
@@ -205,213 +184,168 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          <View
-            style={styles.sections}
-            onLayout={({ nativeEvent }) => setSectionsHeight(nativeEvent.layout.height)}
-          >
-            {/* ─── Overdue Items Section ─── */}
-            <View style={[styles.sectionContainer, { minHeight: minSectionHeight }]}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>OVERDUE ITEMS</Text>
-                <Pressable
-                  onPress={handleOverduePress}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.viewAllText}>View All</Text>
-                </Pressable>
-              </View>
-
-              <ScrollView
-                style={styles.sectionList}
-                nestedScrollEnabled
-                showsVerticalScrollIndicator
-                contentContainerStyle={overdueItems.length === 0 ? styles.emptyListContent : styles.listContent}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={refresh}
-                    colors={[AppColors.navy]}
-                    tintColor={AppColors.navy}
-                  />
-                }
+          {/* ─── Overdue Items Section ─── */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>OVERDUE ITEMS</Text>
+              <Pressable
+                onPress={handleOverduePress}
+                hitSlop={8}
+                accessibilityRole="button"
               >
-                {overdueItems.length === 0 ? (
-                  <EmptyState icon="checkmark-circle-outline" message="No overdue equipment items" style={styles.emptyCard} />
-                ) : (
-                  overdueItems.map((item: DashboardOverdueItem) => (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => handleRecordItemPress(item.transaction_code)}
-                      style={({ pressed }) => [
-                        styles.overdueItemCard,
-                        pressed && styles.cardPressed,
-                      ]}
-                      accessibilityRole="button"
-                    >
-                      {/* Left Red Accent Strip */}
-                      <View style={styles.redAccentStrip} />
-
-                      {/* Item & Borrower Details */}
-                      <View style={styles.itemInfo}>
-                        <Text style={styles.itemTitle} numberOfLines={1}>
-                          {item.title}
-                        </Text>
-                        <Text style={styles.itemBorrower} numberOfLines={1}>
-                          {item.borrower_name}
-                        </Text>
-                      </View>
-
-                      {/* Right Days Late & Due Date */}
-                      <View style={styles.itemRight}>
-                        <Text style={styles.daysLateText}>{item.days_late_label}</Text>
-                        <Text style={styles.dueDateText}>Due {item.due_date}</Text>
-                      </View>
-                    </Pressable>
-                  ))
-                )}
-              </ScrollView>
+                <Text style={styles.viewAllText}>View All</Text>
+              </Pressable>
             </View>
 
-            {/* ─── Recent Transactions Section ─── */}
-            <View style={[styles.sectionContainer, styles.lastSection, { minHeight: minSectionHeight }]}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>RECENT TRANSACTIONS</Text>
+            {overdueItems.length === 0 ? (
+              <EmptyState icon="checkmark-circle-outline" message="No overdue equipment items" style={styles.emptyCard} />
+            ) : (
+              overdueItems.map((item: DashboardOverdueItem) => (
                 <Pressable
-                  onPress={handleViewAllRecordsPress}
-                  hitSlop={8}
+                  key={item.id}
+                  onPress={() => handleRecordItemPress(item.transaction_code)}
+                  style={({ pressed }) => [
+                    styles.overdueItemCard,
+                    pressed && styles.cardPressed,
+                  ]}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.viewAllText}>View All</Text>
+                  {/* Left Red Accent Strip */}
+                  <View style={styles.redAccentStrip} />
+
+                  {/* Item & Borrower Details */}
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemTitle} numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                    <Text style={styles.itemBorrower} numberOfLines={1}>
+                      {item.borrower_name}
+                    </Text>
+                  </View>
+
+                  {/* Right Days Late & Due Date */}
+                  <View style={styles.itemRight}>
+                    <Text style={styles.daysLateText}>{item.days_late_label}</Text>
+                    <Text style={styles.dueDateText}>Due {item.due_date}</Text>
+                  </View>
                 </Pressable>
-              </View>
-
-              <ScrollView
-                style={styles.sectionList}
-                nestedScrollEnabled
-                showsVerticalScrollIndicator
-                contentContainerStyle={recentTransactions.length === 0 ? styles.emptyListContent : styles.recentListContent}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={refresh}
-                    colors={[AppColors.navy]}
-                    tintColor={AppColors.navy}
-                  />
-                }
-              >
-                {recentTransactions.length === 0 ? (
-                  <EmptyState icon="document-text-outline" message="No recent transactions" style={styles.emptyCard} />
-                ) : (
-                  recentTransactions.map((tx: DashboardRecentTransaction) => {
-                    return (
-                      <Pressable
-                        key={tx.id}
-                        onPress={() => handleRecordItemPress(tx.transaction_code)}
-                        style={({ pressed }) => [
-                          styles.transactionCard,
-                          pressed && styles.cardPressed,
-                        ]}
-                        accessibilityRole="button"
-                      >
-                        {/* Item & Borrower */}
-                        <View style={styles.itemInfo}>
-                          <Text style={styles.itemTitle} numberOfLines={1}>
-                            {tx.title}
-                          </Text>
-                          <Text style={styles.itemBorrower} numberOfLines={1}>
-                            {tx.borrower_name}
-                          </Text>
-                        </View>
-
-                        {/* Status Pill & Date */}
-                        <View style={styles.itemRight}>
-                          <StatusBadge status={tx.status} />
-                          <Text style={styles.dateText}>{tx.borrow_date}</Text>
-                        </View>
-                      </Pressable>
-
-                    );
-                  })
-                )}
-              </ScrollView>
-            </View>
+              ))
+            )}
           </View>
-        </View>
+
+          {/* ─── Recent Transactions Section ─── */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>RECENT TRANSACTIONS</Text>
+              <Pressable
+                onPress={handleViewAllRecordsPress}
+                hitSlop={8}
+                accessibilityRole="button"
+              >
+                <Text style={styles.viewAllText}>View All</Text>
+              </Pressable>
+            </View>
+
+            {recentTransactions.length === 0 ? (
+              <EmptyState icon="document-text-outline" message="No recent transactions" style={styles.emptyCard} />
+            ) : (
+              recentTransactions.map((tx: DashboardRecentTransaction) => {
+                return (
+                  <Pressable
+                    key={tx.id}
+                    onPress={() => handleRecordItemPress(tx.transaction_code)}
+                    style={({ pressed }) => [
+                      styles.transactionCard,
+                      pressed && styles.cardPressed,
+                    ]}
+                    accessibilityRole="button"
+                  >
+                    {/* Item & Borrower */}
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {tx.title}
+                      </Text>
+                      <Text style={styles.itemBorrower} numberOfLines={1}>
+                        {tx.borrower_name}
+                      </Text>
+                    </View>
+
+                    {/* Status Pill & Date */}
+                    <View style={styles.itemRight}>
+                      <StatusBadge status={tx.status} />
+                      <Text style={styles.dateText}>{tx.borrow_date}</Text>
+                    </View>
+                  </Pressable>
+
+                );
+              })
+            )}
+          </View>
+        </ScrollView>
       )}
     </TabPageLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  dashboardContent: {
-    flex: 1,
-    minHeight: 0,
-    overflow: 'hidden',
-  },
-  sections: {
-    flex: 1,
-    minHeight: 0,
-    overflow: 'hidden',
-  },
-  sectionList: {
-    flex: 1,
-    minHeight: 0,
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  recentListContent: {
-    paddingBottom: 90,
-  },
-  emptyListContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  headerRight: {
+  welcomeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    flexShrink: 0,
+    marginBottom: 4, // The shared body adds 12px, preserving the 16px gap below the banner.
+    paddingHorizontal: 20,
+    paddingBottom: 22,
+    backgroundColor: AppColors.navy,
   },
-  headerRoleBadge: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderColor: 'rgba(255,255,255,0.16)',
+  welcomeText: { flex: 1, minWidth: 0, marginRight: 12 },
+  welcomeLabel: {
+    fontFamily: AppTypography.fontFamily,
+    fontSize: AppTypography.size.chip,
+    fontWeight: AppTypography.weight.bold,
+    color: AppColors.headerBannerLabel,
+    letterSpacing: 0.8,
+    marginBottom: 4,
   },
-  logoutBtn: {
-    padding: 6,
-    borderRadius: 8,
-  },
-  logoutBtnPressed: {
-    opacity: 0.5,
-  },
+  welcomeName: { fontFamily: AppTypography.fontFamily, fontSize: AppTypography.size.display, fontWeight: AppTypography.weight.heavy, color: AppColors.white },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statsRow: {
-    flexShrink: 0,
     flexDirection: 'row',
     gap: 10,
     marginBottom: 24,
   },
   statCard: {
-    ...screenStyles.card,
     flex: 1,
+    borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   equipmentCard: {
     backgroundColor: AppColors.white,
     borderColor: AppColors.border,
   },
   borrowedCard: {
-    backgroundColor: AppColors.white,
-    borderColor: AppColors.border,
+    backgroundColor: AppColors.borrowedBg,
+    borderColor: '#DBEAFE',
   },
   overdueCard: {
-    backgroundColor: AppColors.white,
-    borderColor: AppColors.border,
+    backgroundColor: AppColors.overdueBg,
+    borderColor: '#FEE2E2',
   },
   cardPressed: {
     opacity: 0.88,
@@ -440,16 +374,9 @@ const styles = StyleSheet.create({
     color: AppColors.textSecondary,
   },
   sectionContainer: {
-    flex: 1,
-    minHeight: 80,
-    overflow: 'hidden',
     marginBottom: 20,
   },
-  lastSection: {
-    marginBottom: 0,
-  },
   sectionHeader: {
-    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -469,12 +396,26 @@ const styles = StyleSheet.create({
     color: AppColors.navy,
   },
   overdueItemCard: {
-    ...screenStyles.card,
+    backgroundColor: AppColors.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: AppColors.border,
     paddingVertical: 14,
     paddingHorizontal: 14,
     marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   redAccentStrip: {
     width: 3.5,
@@ -485,12 +426,26 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   transactionCard: {
-    ...screenStyles.card,
+    backgroundColor: AppColors.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: AppColors.border,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   itemInfo: {
     flex: 1,
